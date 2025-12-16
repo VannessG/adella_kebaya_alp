@@ -1,10 +1,9 @@
-MIDTRANS SERVICE
-
 <?php
 
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+
 
 class MidtransService
 {
@@ -27,67 +26,72 @@ class MidtransService
     }
 
     // Generate Snap Token
-    public function createTransaction($transaction)
+    // Generate Snap Token
+    public function createTransaction($payment)
     {
-        // Build item details from transaction
-        $itemDetails = [];
+        // Ambil transaksi asli (Order atau Rent)
+        $transaction = $payment->transaction; 
         
-        foreach ($transaction->details as $detail) {
+        $itemDetails = [];
+
+        // Ambil produk dari relasi transaction (Order/Rent -> products)
+        foreach ($transaction->products as $product) {
+            $price = $payment->transaction_type == 'rent' 
+                ? $product->pivot->subtotal // Jika sewa, pakai subtotal per item
+                : $product->pivot->price;   // Jika beli, pakai harga beli
+
+            // Pastikan tidak ada desimal untuk Midtrans IDR
+            $price = (int) round($price);
+
             $itemDetails[] = [
-                'id' => $detail->product_id,
-                'price' => (int) round($detail->price), // ✅ FIX: Cast ke INTEGER!
-                'quantity' => $detail->quantity,
-                'name' => $detail->product_name,
+                'id' => $product->id,
+                'price' => $price, // Harga satuan (atau total per item context sewa)
+                'quantity' => 1, // Kita set 1 karena logikanya harga diatas sudah dikali qty/hari (untuk simplifikasi midtrans)
+                'name' => substr($product->name, 0, 50), // Midtrans limit 50 chars
             ];
         }
 
-        // Add shipping as item
-        $itemDetails[] = [
-            'id' => 'SHIPPING',
-            'price' => (int) round($transaction->shipping_cost), // ✅ FIX: Cast ke INTEGER!
-            'quantity' => 1,
-            'name' => 'Shipping Cost (' . strtoupper($transaction->courier_code) . ' - ' . $transaction->courier_service . ')',
-        ];
+        // Tambahkan Ongkir
+        if ($transaction->shipping_cost > 0) {
+            $itemDetails[] = [
+                'id' => 'SHIPPING',
+                'price' => (int) round($transaction->shipping_cost),
+                'quantity' => 1,
+                'name' => 'Biaya Pengiriman',
+            ];
+        }
 
-        $customerDetails = [
-            'first_name' => $transaction->customer_name,
-            'phone' => $transaction->customer_phone,
-            'shipping_address' => [
-                'address' => $transaction->customer_address,
-                'postal_code' => $transaction->postal_code ?? '00000',
-            ],
-        ];
+        // Tambahkan Diskon (Midtrans menerima nilai negatif untuk diskon)
+        // Hitung selisih total item + ongkir dengan total_amount yang harus dibayar
+        $calculatedTotal = array_sum(array_column($itemDetails, 'price'));
+        $realTotal = (int) round($payment->amount);
+        $discountDiff = $calculatedTotal - $realTotal;
+
+        if ($discountDiff > 0) {
+            $itemDetails[] = [
+                'id' => 'DISCOUNT',
+                'price' => -($discountDiff),
+                'quantity' => 1,
+                'name' => 'Potongan Diskon',
+            ];
+        }
 
         $params = [
             'transaction_details' => [
-                'order_id' => $transaction->transaction_code,
-                'gross_amount' => (int) round($transaction->total_amount), // ✅ FIX: Cast ke INTEGER!
+                'order_id' => $payment->payment_number, // Pakai No Pembayaran, bukan No Order
+                'gross_amount' => $realTotal,
             ],
-            'customer_details' => $customerDetails,
+            'customer_details' => [
+                'first_name' => $payment->payer_name,
+                'phone' => $payment->payer_phone,
+            ],
             'item_details' => $itemDetails,
-            // ✅ SET CALLBACKS
-            'callbacks' => [
-                'finish' => route('payment.finish', ['order_id' => $transaction->transaction_code])
-            ]
-        ];
-
-        // ✅ SET CUSTOM EXPIRY (opsional, default 24 jam)
-        $params['expiry'] = [
-            'start_time' => date('Y-m-d H:i:s O'),
-            'unit' => 'day',
-            'duration' => 1
+            // Paksa tampilkan QRIS jika metode pembayaran QRIS
+            // 'enabled_payments' => ['gopay', 'shopeepay', 'qris'], // Opsional: batasi metode
         ];
 
         try {
             $snapToken = \Midtrans\Snap::getSnapToken($params);
-            
-            Log::info('=== MIDTRANS SNAP TOKEN CREATED ===', [
-                'transaction_code' => $transaction->transaction_code,
-                'snap_token' => $snapToken,
-                'transaction_id' => $transaction->id,
-                'finish_url' => route('payment.finish', ['order_id' => $transaction->transaction_code])
-            ]);
-
             return $snapToken;
         } catch (\Exception $e) {
             Log::error('Midtrans Error: ' . $e->getMessage());

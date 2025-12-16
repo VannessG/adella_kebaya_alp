@@ -156,4 +156,32 @@ class ReviewController extends Controller
         return redirect()->route('reviews.index')
             ->with('success', 'Review berhasil dihapus');
     }
+
+    public function adminIndex()
+    {
+        $reviews = Review::with(['user', 'product', 'order', 'rent'])
+            ->latest()
+            ->paginate(10);
+            
+        return view('admin.reviews.index', [
+            'title' => 'Manajemen Review',
+            'reviews' => $reviews
+        ]);
+    }
+    
+    public function approve(Review $review)
+    {
+        $review->update(['is_approved' => true]);
+        
+        return redirect()->route('admin.reviews.index')->with('success', 'Review berhasil disetujui.');
+    }
+    
+    public function destroyAdmin(Review $review)
+    {
+        $review->delete();
+        
+        return redirect()->route('admin.reviews.index')->with('success', 'Review berhasil dihapus.');
+    }
+
+
 }

@@ -20,7 +20,8 @@ class Payment extends Model
         'payer_phone',
         'proof_image',
         'status',
-        'notes'
+        'notes',
+        'snap_token',
     ];
 
     protected $casts = [

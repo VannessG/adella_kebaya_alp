@@ -3,273 +3,167 @@
 @section('title', 'Checkout Pesanan')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <h1 class="fw-bold text mb-4">Checkout Pesanan</h1>
-            
-            @if($discount)
-            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-percent display-4 me-3"></i>
-                    <div>
-                        <h4 class="alert-heading mb-1">🎉 DISKON AKTIF!</h4>
-                        <p class="mb-1">
-                            <strong>{{ $discount->name }}</strong> - 
-                            @if($discount->type === 'percentage')
-                                {{ $discount->amount }}% OFF
-                            @else
-                                Rp {{ number_format($discount->amount, 0, ',', '.') }} OFF
-                            @endif
-                        </p>
-                        <small class="text-muted">
-                            Berlaku hingga: {{ $discount->end_date->format('d M Y') }}
-                        </small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2 class="fw-bold">Checkout</h2>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('cart.index') }}" class="text-decoration-none">Keranjang</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Pengiriman & Pembayaran</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="col-lg-8">
+        <form action="{{ route('checkout') }}" method="POST" enctype="multipart/form-data" id="checkoutForm">
+            @csrf
+            {{-- Hidden Inputs for Direct Checkout --}}
+            @if(isset($isDirectCheckout) && $isDirectCheckout)
+                @foreach($cartItems as $item)
+                    <input type="hidden" name="direct_products[{{ $item['id'] }}]" value="{{ $item['quantity'] }}">
+                @endforeach
             @endif
-            
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0 fw-semibold">Detail Pesanan</h5>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-person-vcard me-2 text-primary"></i>Informasi Penerima</h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Nama Lengkap</label>
+                            <input type="text" name="customer_name" class="form-control" value="{{ $user->name }}" required>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Produk</th>
-                                            <th class="text-center">Jumlah</th>
-                                            <th class="text-end">Harga Satuan</th>
-                                            <th class="text-end">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $subtotal = 0;
-                                            $discountAmount = 0;
-                                        @endphp
-                                        
-                                        @foreach($cartItems as $item)
-                                            @php
-                                                // Hitung harga dengan diskon
-                                                $originalPrice = $item['price'];
-                                                $itemDiscountedPrice = $item['discounted_price'] ?? $item['price'];
-                                                $itemSubtotal = $itemDiscountedPrice * $item['quantity'];
-                                                $itemDiscount = ($originalPrice - $itemDiscountedPrice) * $item['quantity'];
-                                                
-                                                $subtotal += $itemSubtotal;
-                                                $discountAmount += $itemDiscount;
-                                            @endphp
-                                            
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <img src="{{ $item['image_url'] ?? $item['image'] }}" 
-                                                             alt="{{ $item['name'] }}" 
-                                                             class="rounded me-3" 
-                                                             style="width: 60px; height: 60px; object-fit: cover;">
-                                                        <div>
-                                                            <h6 class="mb-1">{{ $item['name'] }}</h6>
-                                                            @if($discount && $itemDiscountedPrice < $originalPrice)
-                                                            <small class="text-success">
-                                                                <i class="bi bi-percent"></i> Diskon diterapkan
-                                                            </small>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="text-center">{{ $item['quantity'] }}</td>
-                                                <td class="text-end">
-                                                    @if($discount && $itemDiscountedPrice < $originalPrice)
-                                                        <div>
-                                                            <small class="text-muted text-decoration-line-through">
-                                                                Rp {{ number_format($originalPrice, 0, ',', '.') }}
-                                                            </small><br>
-                                                            <span class="fw-semibold">
-                                                                Rp {{ number_format($itemDiscountedPrice, 0, ',', '.') }}
-                                                            </span>
-                                                        </div>
-                                                    @else
-                                                        <span class="fw-semibold">
-                                                            Rp {{ number_format($originalPrice, 0, ',', '.') }}
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-end fw-semibold">
-                                                    Rp {{ number_format($itemSubtotal, 0, ',', '.') }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-end">Subtotal:</td>
-                                            <td class="text-end">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
-                                        </tr>
-                                        
-                                        @if($discount && $discountAmount > 0)
-                                        <tr>
-                                            <td colspan="3" class="text-end text-success">
-                                                <i class="bi bi-tag me-1"></i> Diskon {{ $discount->name }}:
-                                            </td>
-                                            <td class="text-end text-success fw-bold">
-                                                - Rp {{ number_format($discountAmount, 0, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                        @endif
-                                        
-                                        <tr>
-                                            <td colspan="3" class="text-end">Biaya Pengiriman:</td>
-                                            <td class="text-end" id="shipping-cost-display">Rp 0</td>
-                                        </tr>
-                                        
-                                        <tr class="border-top">
-                                            <td colspan="3" class="text-end fw-bold fs-5">Total Pembayaran:</td>
-                                            <td class="text-end fw-bold fs-5 text" id="total-payment">
-                                                Rp {{ number_format($subtotal - $discountAmount, 0, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            
-                            <input type="hidden" id="subtotal-value" value="{{ $subtotal }}">
-                            <input type="hidden" id="discount-value" value="{{ $discountAmount }}">
-                            <input type="hidden" id="final-subtotal" value="{{ $subtotal - $discountAmount }}">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">No. Telepon (WhatsApp)</label>
+                            <input type="text" name="customer_phone" class="form-control" value="{{ $user->phone }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small fw-bold">Alamat Pengiriman</label>
+                            <textarea name="customer_address" class="form-control" rows="3" required>{{ $user->address }}</textarea>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0 fw-semibold">Informasi Pengiriman & Pembayaran</h5>
-                        </div>
-                        <div class="card-body">
-                            <form action="{{ route('checkout') }}" method="POST" enctype="multipart/form-data" id="checkoutForm">
-                                @csrf
-                                
-                                @if(isset($isDirectCheckout) && $isDirectCheckout)
-                                    @foreach($cartItems as $item)
-                                        <input type="hidden" name="direct_products[{{ $item['id'] }}]" value="{{ $item['quantity'] }}">
-                                    @endforeach
-                                @endif
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Nama Lengkap</label>
-                                    <input type="text" name="customer_name" class="form-control" 
-                                           value="{{ $user->name }}" required>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">No. Telepon</label>
-                                    <input type="text" name="customer_phone" class="form-control" 
-                                           value="{{ $user->phone }}" required>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Alamat Lengkap</label>
-                                    <textarea name="customer_address" class="form-control" rows="3" required>{{ $user->address }}</textarea>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Metode Pengiriman</label>
-                                    <div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input shipping-method" type="radio" 
-                                                   name="delivery_type" id="pickup" value="pickup" checked 
-                                                   data-cost="0">
-                                            <label class="form-check-label" for="pickup">
-                                                Ambil di Tempat (Gratis)
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input shipping-method" type="radio" 
-                                                   name="delivery_type" id="delivery" value="delivery"
-                                                   data-cost="20000">
-                                            <label class="form-check-label" for="delivery">
-                                                Antar ke Alamat (Rp 20.000)
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Metode Pembayaran</label>
-                                    <div>
-                                        @foreach($paymentMethods as $method)
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="radio" name="payment_method_id" 
-                                                   id="method{{ $method->id }}" value="{{ $method->id }}" 
-                                                   data-type="{{ $method->type }}" required
-                                                   {{ $loop->first ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="method{{ $method->id }}">
-                                                <strong>{{ $method->name }}</strong>
-                                                @if($method->account_number)
-                                                    <br><small class="text-muted">{{ $method->account_name }}: {{ $method->account_number }}</small>
-                                                @endif
-                                            </label>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                <div id="transfer-proof" style="display: none;">
-                                    <div class="mb-3">
-                                        <label for="payment_proof" class="form-label">Upload Bukti Transfer</label>
-                                        <input type="file" class="form-control" id="payment_proof" name="proof_image" accept="image/*">
-                                        <div class="form-text">Upload screenshot bukti transfer Anda</div>
-                                    </div>
-                                </div>
-
-                                @if($discount)
-                                <div class="alert alert-success">
-                                    <small>
-                                        <i class="bi bi-check-circle"></i> 
-                                        <strong>Diskon diterapkan!</strong> Anda hemat 
-                                        @if($discount->type === 'percentage')
-                                            {{ $discount->amount }}%
-                                        @else
-                                            Rp {{ number_format($discount->amount, 0, ',', '.') }}
-                                        @endif
-                                        dari total pembelian.
-                                    </small>
-                                </div>
-                                @endif
-
-                                <div class="alert alert-info">
-                                    <small>
-                                        <i class="bi bi-info-circle"></i> 
-                                        Untuk <strong>QRIS</strong>: Pembayaran otomatis dikonfirmasi<br>
-                                        Untuk <strong>Transfer</strong>: Upload bukti transfer untuk konfirmasi manual
-                                    </small>
-                                </div>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-lg" id="submitBtn">
-                                        <i class="bi bi-credit-card"></i> Proses Pembayaran
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-truck me-2 text-primary"></i>Metode Pengiriman</h5>
+                    
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check shipping-method" name="delivery_type" id="pickup" value="pickup" checked data-cost="0">
+                        <label class="btn btn-outline-secondary py-3" for="pickup">
+                            <i class="bi bi-shop d-block fs-4 mb-1"></i>
+                            Ambil di Toko
+                        </label>
+                    
+                        <input type="radio" class="btn-check shipping-method" name="delivery_type" id="delivery" value="delivery" data-cost="0"> <label class="btn btn-outline-secondary py-3" for="delivery">
+                            <i class="bi bi-box-seam d-block fs-4 mb-1"></i>
+                            Jasa Ekspedisi (JNE/JNT)
+                        </label>
                     </div>
 
-                    <div class="text-center mt-3">
-                        @if(isset($isDirectCheckout) && $isDirectCheckout)
-                            <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Kembali
-                            </a>
-                        @else
-                            <a href="{{ route('cart.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Kembali ke Keranjang
-                            </a>
-                        @endif
+                    <div id="courier-options" class="mt-4" style="display: none;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Pilih Kurir</label>
+                                <select class="form-select" id="courier_code" name="courier_code">
+                                    <option value="jne">JNE</option>
+                                    <option value="pos">POS Indonesia</option>
+                                    <option value="tiki">TIKI</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Layanan</label>
+                                <select class="form-select" id="courier_service" name="courier_service">
+                                    <option value="">Pilih Layanan...</option>
+                                    </select>
+                            </div>
+                            <input type="hidden" name="district_id" id="district_id" value="114"> </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-credit-card me-2 text-primary"></i>Metode Pembayaran</h5>
+                    
+                    <div class="d-flex flex-column gap-2">
+                        @foreach($paymentMethods as $method)
+                        <div class="form-check p-0">
+                            <input class="form-check-input d-none" type="radio" name="payment_method_id" id="method{{ $method->id }}" value="{{ $method->id }}" data-type="{{ $method->type }}" required>
+                            <label class="form-check-label d-flex align-items-center border rounded-3 p-3 w-100 cursor-pointer payment-label" for="method{{ $method->id }}" style="cursor: pointer;">
+                                <div class="bg-light rounded p-2 me-3">
+                                    <i class="bi {{ $method->type == 'qris' ? 'bi-qr-code' : 'bi-bank' }} fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ $method->name }}</div>
+                                    <small class="text-muted">{{ $method->type == 'qris' ? 'Otomatis Verifikasi' : 'Cek Manual Admin' }}</small>
+                                </div>
+                                <div class="ms-auto">
+                                    <i class="bi bi-circle text-muted check-icon"></i>
+                                    <i class="bi bi-check-circle-fill text-success check-icon-active d-none"></i>
+                                </div>
+                            </label>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div id="transfer-proof" class="mt-3 p-3 bg-light rounded-3" style="display: none;">
+                        <label for="payment_proof" class="form-label small fw-bold">Upload Bukti Transfer</label>
+                        <input type="file" class="form-control" id="payment_proof" name="proof_image" accept="image/*">
+                        <div class="form-text">Format: JPG, PNG. Maks 2MB.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 py-3 fw-bold rounded-pill shadow mb-5" id="submitBtn">
+                Buat Pesanan Sekarang
+            </button>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 100px;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4">Ringkasan Pesanan</h5>
+                
+                <div class="d-flex flex-column gap-3 mb-4">
+                    @foreach($cartItems as $item)
+                    <div class="d-flex align-items-center">
+                        <img src="{{ $item['image_url'] }}" class="rounded-3 me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 small fw-bold">{{ $item['name'] }}</h6>
+                            <small class="text-muted">{{ $item['quantity'] }} x Rp {{ number_format($item['discounted_price'], 0, ',', '.') }}</small>
+                        </div>
+                        <div class="fw-semibold small">
+                            Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal Produk</span>
+                        <span class="fw-bold">Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
+                    </div>
+                    
+                    @if($discount)
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span><i class="bi bi-tag-fill me-1"></i> Diskon ({{ $discount->name }})</span>
+                        <span class="fw-bold">- Rp {{ number_format($totalPrice - $totalPrice, 0, ',', '.') }}</span> </div>
+                    @endif
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Ongkos Kirim</span>
+                        <span class="fw-bold" id="shipping-cost-display">Rp 0</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between pt-3 border-top">
+                        <span class="fw-bold fs-5">Total Bayar</span>
+                        <span class="fw-bold fs-5 text-primary" id="total-payment">Rp {{ number_format($totalPrice, 0, ',', '.') }}</span>
+                    </div>
+                    <input type="hidden" id="final-subtotal" value="{{ $totalPrice }}">
                 </div>
             </div>
         </div>
@@ -277,89 +171,59 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const paymentMethods = document.querySelectorAll('input[name="payment_method_id"]');
+    // Styling Script for Payment Selection
+    const paymentRadios = document.querySelectorAll('input[name="payment_method_id"]');
+    const paymentLabels = document.querySelectorAll('.payment-label');
     const transferProof = document.getElementById('transfer-proof');
     const submitBtn = document.getElementById('submitBtn');
-    const checkoutForm = document.getElementById('checkoutForm');
-    const shippingMethods = document.querySelectorAll('.shipping-method');
-    const shippingCostDisplay = document.getElementById('shipping-cost-display');
-    const totalPaymentDisplay = document.getElementById('total-payment');
-    
-    let subtotal = parseFloat(document.getElementById('final-subtotal').value) || 0;
-    let shippingCost = 0;
-    
-    // Update total pembayaran
-    function updateTotalPayment() {
-        const total = subtotal + shippingCost;
-        totalPaymentDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
-        
-        // Update shipping cost display
-        shippingCostDisplay.textContent = 'Rp ' + shippingCost.toLocaleString('id-ID');
-    }
-    
-    // Handle shipping method change
-    shippingMethods.forEach(method => {
-        method.addEventListener('change', function() {
-            shippingCost = parseFloat(this.dataset.cost) || 0;
-            updateTotalPayment();
-        });
-    });
-    
-    // Handle payment method change
-    paymentMethods.forEach(method => {
-        method.addEventListener('change', function() {
+
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Reset styles
+            paymentLabels.forEach(lbl => {
+                lbl.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+                lbl.querySelector('.check-icon').classList.remove('d-none');
+                lbl.querySelector('.check-icon-active').classList.add('d-none');
+            });
+
+            // Apply style to active
+            const activeLabel = this.nextElementSibling;
+            activeLabel.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            activeLabel.querySelector('.check-icon').classList.add('d-none');
+            activeLabel.querySelector('.check-icon-active').classList.remove('d-none');
+
+            // Handle Proof Upload visibility
             if (this.dataset.type === 'transfer') {
                 transferProof.style.display = 'block';
                 document.getElementById('payment_proof').required = true;
-                submitBtn.innerHTML = '<i class="bi bi-credit-card"></i> Proses Pembayaran & Upload Bukti';
             } else {
                 transferProof.style.display = 'none';
                 document.getElementById('payment_proof').required = false;
-                submitBtn.innerHTML = '<i class="bi bi-credit-card"></i> Proses Pembayaran';
             }
         });
     });
-    
-    // Set default payment method
-    const firstPaymentMethod = document.querySelector('input[name="payment_method_id"]:checked');
-    if (firstPaymentMethod) {
-        firstPaymentMethod.dispatchEvent(new Event('change'));
-    }
-    
-    // Set default shipping method
-    const defaultShipping = document.querySelector('.shipping-method:checked');
-    if (defaultShipping) {
-        shippingCost = parseFloat(defaultShipping.dataset.cost) || 0;
-        updateTotalPayment();
-    }
-    
-    // Handle form submission
-    checkoutForm.addEventListener('submit', function(e) {
-        const selectedMethod = document.querySelector('input[name="payment_method_id"]:checked');
-        if (selectedMethod && selectedMethod.dataset.type === 'transfer') {
-            const proofFile = document.getElementById('payment_proof').files[0];
-            if (!proofFile) {
-                e.preventDefault();
-                alert('Silakan upload bukti transfer terlebih dahulu.');
-                return;
+
+    // Simple Shipping Logic (Mockup for View)
+    const shippingRadios = document.querySelectorAll('.shipping-method');
+    const shippingDisplay = document.getElementById('shipping-cost-display');
+    const totalDisplay = document.getElementById('total-payment');
+    const subtotal = parseFloat(document.getElementById('final-subtotal').value);
+
+    shippingRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            let cost = 0;
+            if(this.value === 'delivery') {
+                // Here you would normally fetch from API or select option
+                document.getElementById('courier-options').style.display = 'block';
+                cost = 20000; // Flat rate fallback visualization
+            } else {
+                document.getElementById('courier-options').style.display = 'none';
+                cost = 0;
             }
-        }
-        
-        // Disable button and show loading
-        submitBtn.disabled = true;
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Memproses...';
-        
-        // Re-enable button after 5 seconds if form doesn't submit
-        setTimeout(() => {
-            if (submitBtn.disabled) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-                alert('Proses timeout. Silakan coba lagi.');
-            }
-        }, 5000);
+            
+            shippingDisplay.textContent = 'Rp ' + cost.toLocaleString('id-ID');
+            totalDisplay.textContent = 'Rp ' + (subtotal + cost).toLocaleString('id-ID');
+        });
     });
-});
 </script>
 @endsection

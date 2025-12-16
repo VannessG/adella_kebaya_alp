@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'branch.selected' => \App\Http\Middleware\CheckBranchSelected::class,
             'clear.branch' => \App\Http\Middleware\ClearBranchOnLogout::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+        'payment/callback'
+    ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

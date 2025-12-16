@@ -295,4 +295,60 @@ class RentController extends Controller
             'status' => 'pending'
         ]);
     }
+
+    public function adminIndex()
+    {
+        $branch = session('selected_branch');
+        $rents = Rent::with(['user', 'products', 'branch'])
+            ->when($branch, function($q) use ($branch) {
+                return $q->where('branch_id', $branch->id);
+            })
+            ->latest()
+            ->paginate(10);
+            
+        $statusOptions = Rent::getStatusOptions();
+        
+        return view('admin.rents.index', [
+            'title' => 'Manajemen Penyewaan',
+            'rents' => $rents,
+            'statusOptions' => $statusOptions,
+        ]);
+    }
+    
+    public function showAdmin(Rent $rent)
+    {
+        $statusOptions = Rent::getStatusOptions();
+        
+        return view('admin.rents.show', [
+            'title' => 'Detail Sewa ' . $rent->rent_number,
+            'rent' => $rent,
+            'statusOptions' => $statusOptions,
+        ]);
+    }
+    
+    public function updateStatus(Request $request, Rent $rent)
+    {
+        $statusOptions = Rent::getStatusOptions(); // Perlu ini untuk label notifikasi
+        $validated = $request->validate([
+            'status' => 'required|in:pending,payment_check,confirmed,active,returned,completed,cancelled,overdue'
+        ]);
+        
+        $oldStatus = $rent->status;
+        $rent->update($validated);
+        
+        // Jika status berubah, kirim notifikasi
+        if ($validated['status'] !== $oldStatus) {
+            $statusLabel = $statusOptions[$validated['status']] ?? $validated['status'];
+            // Pakai logic notifikasi admin (manual create karena method private user beda parameter)
+            WhatsappNotification::create([
+                'phone_number' => $rent->user->phone,
+                'message' => "Status sewa {$rent->rent_number} berubah menjadi: {$statusLabel}",
+                'type' => 'notification',
+                'reference_id' => 0,
+                'status' => 'pending'
+            ]);
+        }
+        
+        return redirect()->route('admin.rents.index')->with('success', 'Status sewa berhasil diperbarui.');
+    }
 }

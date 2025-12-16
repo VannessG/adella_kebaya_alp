@@ -1,63 +1,46 @@
-<footer class="bg text-white mt-5">
-    <div class="container py-5">
-        <div class="row">
-            <div class="col-lg-3 col-md-6 mb-4">
-                <h4 class="fw-bold mb-3">Adella Kebaya</h4>
-                <p class="text-light">
-                    Cabang:
+<footer class="mt-auto pt-5 pb-4" style="background-color: #2c2c2c; color: #dcdcdc;">
+    <div class="container">
+        <div class="row gy-4">
+            <div class="col-lg-4 col-md-6">
+                <h3 class="fw-bold text-white mb-3" style="font-family: 'Playfair Display', serif;">Adella Kebaya</h3>
+                <p class="small opacity-75">
+                    Menyewakan dan menjual kebaya berkualitas tinggi untuk momen spesial Anda. Tampil anggun dengan warisan budaya Indonesia.
                 </p>
-                <p class="text-light">
-                    Jl. Mayjend Sungkono No 98, Surabaya
-                </p>
-                <p class="text-light">
-                    Jl. Jenderal Sudirman No 55, Bojonegoro
-                </p>
-            </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-                <h5 class="fw-bold mb-3">
-                    <i class="bi bi-clock me-2"></i>Jam Operasional
-                </h5>
-                <small class="text-light">Senin - Sabtu</small>
-                <div class="text-light">09:00 - 17:00</div>
-            </div>
-
-            <div class="col-lg-3 col-md-6 mb-4">
-                <h5 class="fw-bold mb-3">
-                    <i class="bi bi-telephone me-2"></i>Hubungi Kami
-                </h5>
-                <div class="d-flex flex-column gap-2">
-                    <div class="text-light">
-                        <small>WhatsApp</small>
-                        <div>+62 812-3456-7890</div>
-                    </div>
-                    <div class="text-light">
-                        <small>Email</small>
-                        <div>info@adellakebaya.com</div>
-                    </div>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="#" class="text-white fs-5"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-white fs-5"><i class="bi bi-whatsapp"></i></a>
                 </div>
             </div>
+            
+            <div class="col-lg-2 col-md-6">
+                <h5 class="text-white mb-3">Tautan</h5>
+                <ul class="list-unstyled d-flex flex-column gap-2 small">
+                    <li><a href="{{ url('/') }}" class="text-decoration-none text-light opacity-75 hover-opacity-100">Beranda</a></li>
+                    <li><a href="{{ url('/katalog') }}" class="text-decoration-none text-light opacity-75 hover-opacity-100">Katalog</a></li>
+                    <li><a href="{{ url('/about') }}" class="text-decoration-none text-light opacity-75 hover-opacity-100">Tentang Kami</a></li>
+                </ul>
+            </div>
 
-            <div class="col-lg-3 col-md-6 mb-4">
-                <h5 class="fw-bold mb-3">
-                    Media Sosial
-                </h5>
-                <div class="d-flex gap-3">
-                    <a href="#" class="text-white fs-4">
-                        <i class="bi bi-instagram"></i>
-                    </a>
-                    <a href="#" class="text-white fs-4">
-                        <i class="bi bi-tiktok"></i>
-                    </a>
-                </div>
-                <p class="text-light small mt-3">
-                    Ikuti kami untuk update terbaru koleksi kebaya
-                </p>
+            <div class="col-lg-3 col-md-6">
+                <h5 class="text-white mb-3">Cabang</h5>
+                <ul class="list-unstyled small opacity-75">
+                    <li class="mb-2"><i class="bi bi-geo-alt me-2 text-warning"></i> Surabaya: Jl. Mayjend Sungkono No 98</li>
+                    <li class="mb-2"><i class="bi bi-geo-alt me-2 text-warning"></i> Bojonegoro: Jl. Jenderal Sudirman No 55</li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h5 class="text-white mb-3">Kontak</h5>
+                <ul class="list-unstyled small opacity-75">
+                    <li class="mb-2"><i class="bi bi-telephone me-2"></i> +62 812-3456-7890</li>
+                    <li class="mb-2"><i class="bi bi-envelope me-2"></i> info@adellakebaya.com</li>
+                    <li class="mb-2"><i class="bi bi-clock me-2"></i> Senin - Sabtu (09:00 - 17:00)</li>
+                </ul>
             </div>
         </div>
-        
-        <div class="border-top border-light pt-4 text-center">
-            <p class="mb-0"> 2025 Adella Kebaya. All rights reserved.</p>
+        <div class="border-top border-secondary mt-5 pt-4 text-center small opacity-50">
+            &copy; 2025 Adella Kebaya. All rights reserved.
         </div>
     </div>
 </footer>

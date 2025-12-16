@@ -1,158 +1,165 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adella Kebaya - @yield('title')</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
     <style>
-        .branch-card {
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            border: 2px solid transparent;
-            border-radius: 15px;
-            height: 100%;
-        }
-        .branch-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(113, 63, 9, 0.2);
-            border-color: #713f09;
-        }
-        .btn-branch {
-            background-color: #713f09;
-            color: white;
-            border: 2px solid #713f09;
-        }
-        .btn-branch:hover {
-            background-color: #5a3207;
-            border-color: #5a3207;
-            color: white;
-        }
-        .dashboard-stat-card {
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.3s;
-        }
-        .dashboard-stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .dashboard-action-card {
-            height: 220px;
-            display: flex;
-            flex-direction: column;
-        }
-        .dashboard-action-card .card-body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .list-group-item:hover {
-            background-color: #f8f9fa;
-        }
-        .bg { background-color: #3a2611 !important; }
-        .text { color: #3a2611 !important; }
-        .btn { 
-            background-color: #713f09; 
-            border-color: #713f09;
-            color: white;
-        }
-        .btn:hover {
-            background-color: #3a2611;
-            border-color: #3a2611;
-            color: white;
-        }
-        .border { border-color: #713f09 !important; }
-        .min-h-screen { min-height: 100vh; }
-        
-        .pagination .page-link {
-            color: #3a2611;
-            border-color: #713f09;
-        }
-        .pagination .page-link:hover {
-            background-color: #3a2611;
-            color: white;
-            border-color: #3a2611;
-        }
-        .pagination .page-item.active .page-link {
-            background-color: #713f09;
-            border-color: #713f09;
-            color: white;
-        }
-        
-        /* Branch indicator */
-        .branch-indicator {
-            background: linear-gradient(135deg, #713f09, #3a2611);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        .branch-indicator:hover {
-            background: linear-gradient(135deg, #5a3207, #2d1e0d);
+        :root {
+            --primary-color: #8B5E3C; /* Brown Elegant */
+            --primary-hover: #6F4B30;
+            --accent-color: #D4AF37; /* Gold */
+            --bg-light: #F9F7F2; /* Creamy White */
+            --text-dark: #2C2C2C;
         }
 
-        /* Star Rating */
-        .rating-input {
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
             display: flex;
-            gap: 10px;
-            direction: rtl;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        .star-label {
-            cursor: pointer;
-            position: relative;
-            color: #ddd;
-            transition: color 0.3s;
+
+        h1, h2, h3, h4, h5, h6, .navbar-brand {
+            font-family: 'Playfair Display', serif;
         }
-        .star-label:hover,
-        .star-label:hover ~ .star-label {
-            color: #ffc107;
+
+        /* Buttons */
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
         }
-        .rating-input input:checked ~ .star-label {
-            color: #ffc107;
+
+        .btn-primary-custom:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(139, 94, 60, 0.3);
         }
-        .star-label i:last-child {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
+
+        .btn-outline-custom {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 50px;
         }
-        .rating-input input:checked ~ .star-label i:last-child,
-        .star-label:hover i:last-child,
-        .star-label:hover ~ .star-label i:last-child {
-            opacity: 1;
+
+        .btn-outline-custom:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        /* Badges */
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 1em;
+            border-radius: 30px;
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(139, 94, 60, 0.15);
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            color: var(--primary-color);
+            border: none;
+            margin: 0 2px;
+            border-radius: 8px;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
         }
     </style>
 </head>
-<body class="bg-light d-flex flex-column min-h-screen">
+<body>
 
     @include('partials.navbar')
 
-    <main class="flex-grow-1 container my-4">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+    <main class="flex-grow-1 py-4">
+        <div class="container">
+            {{-- Alerts --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill fs-4 me-2"></i>
+                        <div>{{ session('success') }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-circle-fill fs-4 me-2"></i>
+                        <div>{{ session('error') }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
 
-        @yield('content')
+            @yield('content')
+        </div>
     </main>
 
     @include('partials.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     @yield('scripts')
 </body>
