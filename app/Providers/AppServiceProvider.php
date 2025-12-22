@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL; // <--- WAJIB DITAMBAHKAN AGAR TIDAK ERROR
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +22,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        // --- SOLUSI FIX NOT SECURE DI NGROK ---
+        // Memaksa semua link generate Laravel menjadi HTTPS
+        if ($this->app->environment('local')) {
+            URL::forceScheme('https');
+        }
     }
 }

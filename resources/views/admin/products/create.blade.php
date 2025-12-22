@@ -61,9 +61,16 @@
                             </div>
                         </div>
 
+                        {{-- PERBAIKAN DI SINI: --}}
+                        {{-- Hapus reference $product->weight karena ini halaman CREATE --}}
                         <div class="mb-3">
                             <label for="weight" class="form-label">Berat (gram)</label>
-                            <input type="number" class="form-control" id="weight" name="weight" value="{{ old('weight', $product->weight ?? 0) }}" min="0" required>
+                            <input type="number" class="form-control @error('weight') is-invalid @enderror" 
+                                   id="weight" name="weight" value="{{ old('weight', 1000) }}" min="1" placeholder="Contoh: 1000" required>
+                            <small class="text-muted">Masukkan berat dalam satuan gram (1000 gram = 1 kg)</small>
+                            @error('weight')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="mb-3">
@@ -90,7 +97,7 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn">Simpan Produk</button>
+                            <button type="submit" class="btn btn-primary">Simpan Produk</button>
                             <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">Batal</a>
                         </div>
                     </form>

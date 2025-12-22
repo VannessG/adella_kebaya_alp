@@ -11,8 +11,8 @@ use App\Http\Controllers\RentController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\PaymentController; // Tambahkan ini
-use App\Http\Controllers\PaymentCallbackController; // Tambahkan ini
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentCallbackController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,7 +54,7 @@ Route::post('/payment/callback', [PaymentCallbackController::class, 'handle'])->
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated User Routes
+| Authenticated User Routes (User Biasa)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'branch.selected'])->group(function () {
@@ -86,7 +86,7 @@ Route::middleware(['auth', 'branch.selected'])->group(function () {
     Route::post('/sewa', [RentController::class, 'store'])->name('rent.store');
     Route::get('/sewa/{rentNumber}', [RentController::class, 'show'])->name('rent.show');
     Route::post('/sewa/{rent}/cancel', [RentController::class, 'cancel'])->name('rent.cancel');
-    Route::post('/sewa/{rent}/return', [RentController::class, 'return'])->name('rent.return'); // Jika ada fitur pengembalian
+    Route::post('/sewa/{rent}/return', [RentController::class, 'return'])->name('rent.return');
 
     // Reviews Routes
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
@@ -101,6 +101,18 @@ Route::middleware(['auth', 'branch.selected'])->group(function () {
     // Midtrans Specific Routes
     Route::get('/payment/pay/{paymentNumber}', [PaymentController::class, 'pay'])->name('payment.pay');
     Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
+
+    // --- RAJAONGKIR ROUTES (DIPINDAHKAN KE SINI AGAR BISA DIAKSES USER) ---
+    Route::get('/rajaongkir/provinces', [OrderController::class, 'getProvinces'])->name('rajaongkir.provinces');
+    
+    // Route untuk mengambil daftar Kota berdasarkan ID Provinsi
+    Route::get('/rajaongkir/cities/{provinceId}', [OrderController::class, 'getCities'])->name('rajaongkir.cities');
+    
+    // Route untuk mengambil daftar Kecamatan berdasarkan ID Kota
+    Route::get('/rajaongkir/districts/{cityId}', [OrderController::class, 'getDistricts'])->name('rajaongkir.districts');
+    
+    // Route untuk menghitung Ongkir (Ajax POST)
+    Route::get('/rajaongkir/shipping', [OrderController::class, 'getShippingCost'])->name('rajaongkir.shipping');
 });
 
 /*
@@ -112,11 +124,10 @@ Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // Dashboard (Tetap di AdminController)
+        // Dashboard
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-        // Product Management (Pindah ke ProductController)
-        // Gunakan method adminIndex untuk list, sisanya pakai method resource standar yang sudah admin-ready
+        // Product Management
         Route::get('/products', [ProductController::class, 'adminIndex'])->name('products.index');
         Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('/products', [ProductController::class, 'store'])->name('products.store');
@@ -124,7 +135,7 @@ Route::middleware(['auth', 'admin'])
         Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
         
-        // Category Management (Tetap di CategoryController - sudah rapi)
+        // Category Management
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
@@ -132,40 +143,34 @@ Route::middleware(['auth', 'admin'])
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-        // Order Management (Pindah ke OrderController)
+        // Order Management
         Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
         Route::get('/orders/create', [OrderController::class, 'createAdmin'])->name('orders.create');
         Route::post('/orders', [OrderController::class, 'storeAdmin'])->name('orders.store');
         Route::get('/orders/{order}', [OrderController::class, 'showAdmin'])->name('orders.show');
         Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
         
-        // Rent Management (Pindah ke RentController)
+        // Rent Management
         Route::get('/rents', [RentController::class, 'adminIndex'])->name('rents.index');
         Route::get('/rents/{rent}', [RentController::class, 'showAdmin'])->name('rents.show');
         Route::put('/rents/{rent}/status', [RentController::class, 'updateStatus'])->name('rents.update-status');
         
-        // Discount Management (Tetap di DiscountController - sudah rapi)
+        // Discount Management
         Route::resource('discounts', DiscountController::class);
         
-        // Branch Management (Tetap di BranchController - sudah rapi)
+        // Branch Management
         Route::resource('branches', BranchController::class);
         
-        // Payment Management (Pindah ke PaymentController)
+        // Payment Management
         Route::get('/payments', [PaymentController::class, 'adminIndex'])->name('payments.index');
         Route::put('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])->name('payments.update-status');
         
-        // Shipment Management (Pindah ke OrderController karena berkaitan erat & user tidak minta file baru)
+        // Shipment Management
         Route::get('/shipments', [OrderController::class, 'shipmentsIndex'])->name('shipments.index');
         Route::put('/shipments/{shipment}/status', [OrderController::class, 'updateShipmentStatus'])->name('shipments.update-status');
         
-        // Reviews Management (Pindah ke ReviewController)
+        // Reviews Management
         Route::get('/reviews', [ReviewController::class, 'adminIndex'])->name('reviews.index');
         Route::put('/reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
         Route::delete('/reviews/{review}', [ReviewController::class, 'destroyAdmin'])->name('reviews.destroy');
-
-        // RajaOngkir Routes (Pindah ke OrderController)
-        Route::get('/rajaongkir/provinces', [OrderController::class, 'getProvinces'])->name('rajaongkir.provinces');
-        Route::get('/rajaongkir/cities/{provinceId}', [OrderController::class, 'getCities'])->name('admin.rajaongkir.cities');
-        Route::get('/rajaongkir/districts/{cityId}', [OrderController::class, 'getDistricts'])->name('admin.rajaongkir.districts');
-        Route::get('/rajaongkir/shipping', [OrderController::class, 'getShippingCost'])->name('admin.rajaongkir.shipping');
     });
