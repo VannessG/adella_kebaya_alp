@@ -123,12 +123,6 @@
                             </button>
                         </form>
                     @endif
-                    @if($order->shipment && $order->shipment->chatRoom)
-                        <a href="{{ route('chat.show', $order->shipment->chatRoom->token) }}" 
-                        class="btn btn-info" target="_blank">
-                            <i class="bi bi-chat"></i> Chat Driver
-                        </a>
-                    @endif
                     <button class="btn btn-success">
                         <i class="bi bi-whatsapp"></i> Hubungi CS
                     </button>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Order extends Model
 {
@@ -58,6 +59,20 @@ class Order extends Model
 
     public function reviews(){
         return $this->hasMany(Review::class);
+    }
+
+    // Relasi untuk mengecek apakah user sudah me-review produk tertentu di order ini
+    public function userProductReview($productId)
+    {
+        // Cek apakah user sedang login untuk menghindari error pada tamu (guest)
+        if (!Auth::check()) {
+            return null;
+        }
+
+        return $this->reviews()
+            ->where('user_id', Auth::id()) // Lebih aman dan efisien
+            ->where('product_id', $productId)
+            ->first();
     }
 
     public static function getStatusOptions(){

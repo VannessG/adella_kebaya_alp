@@ -14,10 +14,10 @@
     
     <style>
         :root {
-            --primary-color: #8B5E3C; /* Brown Elegant */
+            --primary-color: #8B5E3C;
             --primary-hover: #6F4B30;
-            --accent-color: #D4AF37; /* Gold */
-            --bg-light: #F9F7F2; /* Creamy White */
+            --accent-color: #D4AF37;
+            --bg-light: #F9F7F2;
             --text-dark: #2C2C2C;
         }
 
@@ -63,14 +63,18 @@
             color: white;
         }
 
-        /* Cards */
+        /* Cards - PERBAIKAN FLICKERING DI SINI */
         .card {
             border: none;
             border-radius: 16px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.03);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
             background: #fff;
             overflow: hidden;
+            /* Tambahan untuk stabilitas */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            will-change: transform;
         }
 
         .card:hover {
@@ -78,14 +82,12 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.08);
         }
 
-        /* Badges */
         .badge {
             font-weight: 500;
             padding: 0.5em 1em;
             border-radius: 30px;
         }
 
-        /* Form Controls */
         .form-control, .form-select {
             border-radius: 10px;
             padding: 0.7rem 1rem;
@@ -97,7 +99,6 @@
             box-shadow: 0 0 0 0.25rem rgba(139, 94, 60, 0.15);
         }
 
-        /* Pagination */
         .pagination .page-link {
             color: var(--primary-color);
             border: none;
@@ -110,20 +111,10 @@
             color: white;
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-color);
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
     </style>
 </head>
 <body>
@@ -132,7 +123,6 @@
 
     <main class="flex-grow-1 py-4">
         <div class="container">
-            {{-- Alerts --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
                     <div class="d-flex align-items-center">

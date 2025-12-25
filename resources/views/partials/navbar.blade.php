@@ -28,10 +28,18 @@
                         <li class="nav-item px-2"><a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'text-primary active' : '' }}" href="{{ route('admin.orders.index') }}">Pesanan</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->routeIs('admin.rents.*') ? 'text-primary active' : '' }}" href="{{ route('admin.rents.index') }}">Sewa</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->routeIs('admin.products.*') ? 'text-primary active' : '' }}" href="{{ route('admin.products.index') }}">Produk</a></li>
+                        <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active fw-bold' : '' }}" 
+           href="{{ route('admin.reports.index') }}">
+            <i class="bi bi-graph-up-arrow me-1"></i> Rekapan
+        </a>
+    </li>
                     @else
                         <li class="nav-item px-2"><a class="nav-link {{ request()->is('/') ? 'text-primary active' : '' }}" href="{{ url('/') }}">Beranda</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->is('katalog*') ? 'text-primary active' : '' }}" href="{{ url('/katalog') }}">Katalog</a></li>
-                        <li class="nav-item px-2"><a class="nav-link {{ request()->is('pesanan*') ? 'text-primary active' : '' }}" href="{{ url('/pesanan') }}">Transaksi</a></li>
+                        {{-- Transaksi User Terbagi Dua --}}
+                        <li class="nav-item px-2"><a class="nav-link {{ request()->is('pesanan*') ? 'text-primary active' : '' }}" href="{{ url('/pesanan') }}">Pesanan</a></li>
+                        <li class="nav-item px-2"><a class="nav-link {{ request()->is('sewa*') ? 'text-primary active' : '' }}" href="{{ url('/sewa') }}">Sewa</a></li>
                     @endif
                 @endauth
                 
@@ -81,7 +89,7 @@
                     @endif
                 @endauth
 
-                {{-- Auth Buttons --}}
+                {{-- Auth Dropdown --}}
                 @guest
                     <a href="{{ route('login') }}" class="btn btn-outline-custom px-4">Masuk</a>
                     <a href="{{ route('register') }}" class="btn btn-primary-custom px-4">Daftar</a>
@@ -94,7 +102,7 @@
                             <span class="d-none d-lg-inline">{{ auth()->user()->name }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
-                            <li><a class="dropdown-item py-2" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i> Profil Saya</a></li>
+                            <li><a class="dropdown-item py-2" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i> Profil</a></li>
                             @if(auth()->user()->role === 'user')
                                 <li><a class="dropdown-item py-2" href="{{ route('rent.index') }}"><i class="bi bi-clock-history me-2"></i> Riwayat Sewa</a></li>
                             @endif

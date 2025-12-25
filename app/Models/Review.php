@@ -2,75 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'user_id',
-        'order_id',
-        'rent_id',
-        'product_id',
-        'rating',
-        'comment',
-        'image',
-        'is_approved'
+        'user_id', 'order_id', 'rent_id', 'product_id', 
+        'rating', 'comment', 'image', 'is_approved'
     ];
 
-    public function user()
-    {
+    public function user() {
         return $this->belongsTo(User::class);
     }
 
-    public function product()
-    {
+    public function product() {
         return $this->belongsTo(Product::class);
     }
 
-    public function order()
+    // Accessor: Sensor email menjadi u*******@gmail.com
+    public function getMaskedEmailAttribute()
     {
-        return $this->belongsTo(Order::class);
-    }
-
-    public function rent()
-    {
-        return $this->belongsTo(Rent::class);
-    }
-
-    // Get transaction (order atau rent)
-    public function transaction()
-    {
-        return $this->order_id ? $this->order : $this->rent;
-    }
-
-    public function getImageUrlAttribute()
-    {
-        if ($this->image) {
-            return asset('storage/' . $this->image);
-        }
-        return null;
-    }
-
-    // Cek apakah user sudah mereview produk dalam transaksi ini
-    public static function hasReviewed($userId, $productId, $orderId = null, $rentId = null)
-    {
-        if ($orderId) {
-            return self::where('user_id', $userId)
-                ->where('product_id', $productId)
-                ->where('order_id', $orderId)
-                ->exists();
-        }
+        $email = $this->user->email;
+        $parts = explode('@', $email);
+        $name = $parts[0];
+        $domain = $parts[1];
         
-        if ($rentId) {
-            return self::where('user_id', $userId)
-                ->where('product_id', $productId)
-                ->where('rent_id', $rentId)
-                ->exists();
-        }
-        
-        return false;
+        $maskedName = substr($name, 0, 1) . str_repeat('*', 7);
+        return $maskedName . '@' . $domain;
     }
 }

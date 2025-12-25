@@ -18,8 +18,17 @@ class CategoryController extends Controller{
     }
 
     public function show($id){
+        // Mengambil data cabang dari session
+        $branch = session('selected_branch');
+        
         $category = Category::findOrFail($id);
-        $products = Product::where('category_id', $category->id)->get();
+        
+        // PERBAIKAN: Menambahkan filter branch_id agar produk yang muncul sesuai cabang yang dipilih
+        $products = Product::where('category_id', $category->id)
+            ->where('branch_id', $branch->id)
+            ->where('is_available', true)
+            ->get();
+            
         return view('category.show', [
             'title' => $category->name,
             'category' => $category,

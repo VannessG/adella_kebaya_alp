@@ -4,23 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Rent;
 use App\Models\Product;
-use App\Models\Branch;
 use App\Models\PaymentMethod;
 use App\Models\Discount;
-use App\Models\WhatsappNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Services\RajaOngkirService;
+use App\Services\MidtransService;
 use Carbon\Carbon;
 
 class RentController extends Controller
 {
     protected $rajaOngkirService;
 
-    // ID Kecamatan Cabang (Sesuai database RajaOngkir)
     const ORIGIN_WARU = 6626;       
     const ORIGIN_BOJONEGORO = 953;  
 
@@ -29,214 +27,158 @@ class RentController extends Controller
         $this->rajaOngkirService = $rajaOngkirService;
     }
 
-    private function getStatusOptions()
+    public function cancel(Rent $rent)
     {
-        return [
-            'pending' => 'Menunggu Pembayaran',
-            'payment_check' => 'Cek Pembayaran',
-            'confirmed' => 'Dikonfirmasi',
-            'active' => 'Sedang Disewa',
-            'returned' => 'Sudah Dikembalikan',
-            'completed' => 'Selesai',
-            'cancelled' => 'Dibatalkan',
-            'overdue' => 'Terlambat'
-        ];
+        if ($rent->user_id !== Auth::id()) return back()->with('error', 'Akses ditolak.');
+        // Menggunakan method canBeCancelled dari model Rent.php
+        if (!$rent->canBeCancelled()) return back()->with('error', 'Sewa tidak bisa dibatalkan.');
+
+        DB::transaction(function () use ($rent) {
+            foreach ($rent->products as $product) { $product->increment('stock', $product->pivot->quantity); }
+            $rent->update(['status' => 'cancelled']);
+            $rent->payments()->update(['status' => 'failed']);
+        });
+        return back()->with('success', 'Penyewaan dibatalkan.');
     }
 
-    public function index()
-    {
-        $rents = Rent::where('user_id', Auth::id())->latest()->get();
-        return view('rent.index', [
-            'title' => 'Riwayat Sewa',
-            'rents' => $rents,
-            'statusOptions' => $this->getStatusOptions(),
-        ]);
+    // --- AJAX HELPER RAJAONGKIR ---
+    public function getProvinces() {
+        return response()->json($this->rajaOngkirService->getProvinces());
     }
-
-    public function show($rentNumber)
-    {
-        $rent = Rent::where('rent_number', $rentNumber)
-                    ->where('user_id', Auth::id())
-                    ->firstOrFail();
-                    
-        return view('rent.show', [
-            'title' => 'Detail Sewa ' . $rentNumber,
-            'rent' => $rent,
-            'statusOptions' => $this->getStatusOptions(),
-        ]);
+    public function getCities($provinceId) {
+        return response()->json($this->rajaOngkirService->getCities($provinceId));
     }
-
-    public function create(Request $request, Product $product = null)
-    {
+    public function getDistricts($cityId) {
+        return response()->json($this->rajaOngkirService->getDistricts($cityId));
+    }
+    public function getShippingCost(Request $request) {
         $branch = session('selected_branch');
-        if (!$branch) {
-            return redirect()->route('select.branch')->with('error', 'Silakan pilih cabang terlebih dahulu');
-        }
-
-        $products = Product::where('branch_id', $branch->id)
-                            ->where('is_available_for_rent', true)
-                            ->where('stock', '>', 0)
-                            ->get();
-                        
-        $paymentMethods = PaymentMethod::where('is_active', true)->get();
-        $activeDiscount = Discount::where('is_active', true)
-            ->whereDate('start_date', '<=', now())
-            ->whereDate('end_date', '>=', now())
-            ->first();
-            
-        // Ambil data Provinsi untuk Dropdown Alamat
-        $provinces = $this->rajaOngkirService->getProvinces();
-
-        $selectedProduct = $product;
-        if ($selectedProduct && (!$selectedProduct->is_available_for_rent || $selectedProduct->stock <= 0)) {
-            return redirect()->back()->with('error', 'Produk tidak tersedia untuk disewa');
-        }
-
-        return view('rent.create', [
-            'title' => 'Sewa Kebaya',
-            'products' => $products,
-            'selectedProduct' => $selectedProduct,
-            'paymentMethods' => $paymentMethods,
-            'discount' => $activeDiscount,
-            'branch' => $branch,
-            'provinces' => $provinces,
-            'isDirectRent' => $product !== null
-        ]);
+        $originId = str_contains(strtolower($branch->name), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
+        $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, $request->weight ?? 1000, $request->courier);
+        return response()->json(['costs' => $costs]);
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'products' => 'required|array|min:1',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after:start_date',
-            'customer_name' => 'required|string',
-            'customer_phone' => 'required|string',
-            'delivery_type' => 'required|in:pickup,delivery',
-            'district_id' => 'required_if:delivery_type,delivery',
-            'payment_method_id' => 'required|exists:payment_methods,id',
-        ]);
+    // --- USER METHODS ---
+    public function index() {
+        $rents = Rent::with(['products', 'reviews'])->where('user_id', Auth::id())->latest()->get();
+        return view('rent.index', ['rents' => $rents, 'statusOptions' => Rent::getStatusOptions()]);
+    }
 
+    public function create(Request $request, Product $product = null) {
+        $branch = session('selected_branch');
+        if (!$branch) return redirect()->route('select.branch');
+        $products = Product::where('branch_id', $branch->id)->where('is_available_for_rent', true)->where('stock', '>', 0)->get();
+        $paymentMethods = PaymentMethod::where('is_active', true)->get();
+        $discounts = Discount::where('is_active', true)
+        ->whereDate('start_date', '<=', now())
+        ->whereDate('end_date', '>=', now())
+        ->get();
+        $provinces = $this->rajaOngkirService->getProvinces();
+        return view('rent.create', compact('products', 'product', 'paymentMethods', 'discounts', 'branch', 'provinces'));
+    }
+
+    public function store(Request $request) {
+    $request->validate([
+        'products' => 'required|array',
+        'start_date' => 'required|date|after_or_equal:today',
+        'end_date' => 'required|date|after:start_date',
+        'customer_name' => 'required|string',
+        'customer_phone' => 'required|string',
+        'delivery_type' => 'required|in:pickup,delivery',
+        'payment_method_id' => 'required|exists:payment_methods,id',
+        'discount_id' => 'nullable|exists:discounts,id', // TAMBAHKAN INI
+        'district_id' => 'required_if:delivery_type,delivery', // PERBAIKI INI
+    ]);
+
+    return DB::transaction(function () use ($request) {
         $branch = session('selected_branch');
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
-        $totalDays = $startDate->diffInDays($endDate);
-        if($totalDays < 1) $totalDays = 1;
+        $totalDays = max(1, $startDate->diffInDays($endDate));
 
-        $totalAmount = 0;
-        $totalWeight = 0;
-        $rentProducts = [];
-
+        $totalAmount = 0; $totalWeight = 0; $rentProducts = [];
         foreach ($request->products as $item) {
-            $product = Product::find($item['id']);
-            if (!$product || $product->stock < $item['quantity']) {
-                return back()->with('error', 'Stok tidak mencukupi untuk ' . ($product->name ?? 'produk'));
-            }
-
-            // Hitung Harga: (Harga/Hari * Durasi) * Quantity
-            $rentPricePerItem = $product->rent_price_per_day * $totalDays;
-            $subtotal = $rentPricePerItem * $item['quantity'];
-            
-            $totalAmount += $subtotal;
+            $product = Product::findOrFail($item['id']);
+            $subtotal = ($product->rent_price_per_day * $totalDays) * $item['quantity'];
+            $totalAmount += $subtotal; 
             $totalWeight += ($product->weight ?? 1000) * $item['quantity'];
-
-            $rentProducts[$product->id] = [
-                'quantity' => $item['quantity'],
-                'price_per_day' => $product->rent_price_per_day,
-                'subtotal' => $subtotal
-            ];
-
+            $rentProducts[$product->id] = ['quantity' => $item['quantity'], 'price_per_day' => $product->rent_price_per_day, 'subtotal' => $subtotal];
             $product->decrement('stock', $item['quantity']);
         }
 
-        // Hitung Ongkir
-        $shippingCost = 0;
-        if ($request->delivery_type === 'delivery') {
-            $originId = str_contains(strtolower($branch->name), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
-            
-            $costs = $this->rajaOngkirService->calculateShippingCost(
-                $originId, 
-                $request->district_id, 
-                $totalWeight, 
-                $request->courier_code ?? 'jne'
-            );
-
-            // Cari service yang dipilih (default service pertama)
-            $shippingCost = $costs[0]['cost'] ?? 20000;
-            foreach($costs as $c) {
-                if($c['service'] == $request->courier_service) {
-                    $shippingCost = $c['cost'];
-                    break;
-                }
+        // Hitung Diskon Berdasarkan Pilihan User
+        $discountAmount = 0;
+        $appliedDiscount = null;
+        if ($request->filled('discount_id')) {
+            $appliedDiscount = Discount::find($request->discount_id);
+            if ($appliedDiscount && $appliedDiscount->isActive()) {
+                $discountAmount = $appliedDiscount->applyTo($totalAmount);
             }
         }
 
-        $totalAmount += $shippingCost;
+        $shippingCost = 0;
+        if ($request->delivery_type === 'delivery') {
+            $originId = str_contains(strtolower($branch->name), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
+            $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, $totalWeight, $request->courier_code);
+            foreach($costs as $c) { if($c['service'] == $request->courier_service) { $shippingCost = $c['cost']; break; } }
+        }
 
-        return DB::transaction(function () use ($request, $branch, $startDate, $endDate, $totalDays, $totalAmount, $shippingCost, $rentProducts) {
-            $rent = Rent::create([
-                'rent_number' => 'RENT-' . strtoupper(Str::random(4)) . '-' . time(),
-                'user_id' => Auth::id(),
-                'branch_id' => $branch->id,
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'total_days' => $totalDays,
-                'status' => 'pending',
-                'total_amount' => $totalAmount,
-                'delivery_type' => $request->delivery_type,
-                'shipping_cost' => $shippingCost,
-                'customer_address' => $request->customer_address,
-                'customer_name' => $request->customer_name,
-                'customer_phone' => $request->customer_phone,
-            ]);
+        // Total Akhir setelah Diskon
+        $finalTotal = ($totalAmount + $shippingCost) - $discountAmount;
 
-            $rent->products()->sync($rentProducts);
+        $rent = Rent::create([
+            'rent_number' => 'RENT-' . strtoupper(Str::random(5)) . '-' . time(),
+            'user_id' => Auth::id(), 'branch_id' => $branch->id,
+            'start_date' => $startDate, 'end_date' => $endDate, 'total_days' => $totalDays,
+            'status' => 'pending', 'total_amount' => $finalTotal,
+            'delivery_type' => $request->delivery_type, 'shipping_cost' => $shippingCost,
+            'customer_address' => $request->customer_address, 'customer_name' => $request->customer_name, 'customer_phone' => $request->customer_phone,
+            'discount_id' => $appliedDiscount ? $appliedDiscount->id : null, // Simpan ID Diskon
+        ]);
+        $rent->products()->sync($rentProducts);
 
-            $paymentMethod = PaymentMethod::find($request->payment_method_id);
-            $payment = $rent->payments()->create([
-                'payment_number' => 'PAY-RENT-' . time(),
-                'payment_method_id' => $paymentMethod->id,
-                'amount' => $totalAmount,
-                'payer_name' => $request->customer_name,
-                'payer_phone' => $request->customer_phone,
-                'status' => 'pending',
-            ]);
+        if ($appliedDiscount) { $appliedDiscount->increment('used_count'); }
 
-            $this->sendWhatsappNotification($rent, $payment);
+        $paymentMethod = PaymentMethod::find($request->payment_method_id);
+        $payment = $rent->payments()->create([
+            'payment_number' => 'PAY-RENT-' . strtoupper(Str::random(5)),
+            'payment_method_id' => $paymentMethod->id, 'amount' => $finalTotal,
+            'payer_name' => $request->customer_name, 'payer_phone' => $request->customer_phone, 'status' => 'pending'
+        ]);
 
-            return redirect()->route('rent.show', $rent->rent_number)
-                ->with('success', 'Penyewaan berhasil dibuat!');
-        });
+        if (in_array($paymentMethod->type, ['qris', 'va'])) {
+            try {
+                $midtrans = new MidtransService();
+                $snapToken = $midtrans->createTransaction($payment);
+                $payment->update(['snap_token' => $snapToken]);
+                return redirect()->route('payment.pay', $payment->payment_number);
+            } catch (\Exception $e) { Log::error("Midtrans Rent Error: " . $e->getMessage()); }
+        }
+        return redirect()->route('rent.show', $rent->rent_number)->with('success', 'Penyewaan berhasil dibuat!');
+    });
+}
+
+    public function show($rentNumber) {
+        $rent = Rent::where('rent_number', $rentNumber)->where('user_id', Auth::id())->firstOrFail();
+        return view('rent.show', ['rent' => $rent, 'statusOptions' => Rent::getStatusOptions()]);
     }
 
-    private function sendWhatsappNotification($rent, $payment)
-    {
-        $message = "📢 *SEWA BARU* 📢\nNo: {$rent->rent_number}\nPelanggan: {$rent->customer_name}\nTotal: Rp " . number_format($rent->total_amount, 0, ',', '.');
-        
-        WhatsappNotification::create([
-            'phone_number' => config('app.admin_whatsapp', '628123456789'),
-            'message' => $message,
-            'type' => 'rent',
-            'reference_id' => $rent->id,
-            'status' => 'pending'
+    // --- ADMIN METHODS (PERBAIKAN ERROR 405/UNDEFINED) ---
+    public function adminIndex() {
+        $rents = Rent::with(['user', 'branch'])->latest()->paginate(10);
+        return view('admin.rents.index', ['rents' => $rents, 'statusOptions' => Rent::getStatusOptions()]);
+    }
+
+    public function showAdmin(Rent $rent) {
+        return view('admin.rents.show', [
+            'rent' => $rent->load(['products', 'user', 'payments.paymentMethod']),
+            'statusOptions' => Rent::getStatusOptions()
         ]);
     }
 
-    // Admin Methods
-    public function adminIndex()
-    {
-        $branch = session('selected_branch');
-        $rents = Rent::with(['user', 'products', 'branch'])
-            ->when($branch, function($q) use ($branch) {
-                return $q->where('branch_id', $branch->id);
-            })
-            ->latest()
-            ->paginate(10);
-            
-        return view('admin.rents.index', [
-            'title' => 'Manajemen Penyewaan',
-            'rents' => $rents,
-            'statusOptions' => $this->getStatusOptions(),
-        ]);
+    public function updateStatus(Request $request, Rent $rent) {
+        $request->validate(['status' => 'required|in:' . implode(',', array_keys(Rent::getStatusOptions()))]);
+        $rent->update(['status' => $request->status]);
+        return back()->with('success', 'Status sewa berhasil diperbarui.');
     }
 }

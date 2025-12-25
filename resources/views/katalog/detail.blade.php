@@ -76,7 +76,8 @@
                 </ul>
             </div>
 
-            {{-- Action Buttons --}}
+                        {{-- Action Buttons --}}
+                        {{-- Cari bagian Action Buttons di file katalog/show --}}
             <div class="mt-auto d-grid gap-2 d-md-flex">
                 @auth
                     @if(auth()->user()->role === 'user')
@@ -91,8 +92,10 @@
                             <a href="{{ route('checkout.form') }}?product={{ $product->id }}&quantity=1" class="btn btn-primary-custom flex-grow-1 py-3 rounded-pill fw-bold">
                                 Beli Sekarang
                             </a>
+                            
+                            {{-- PERBAIKAN LINK SEWA: Ubah rent.create.product menjadi rent.create --}}
                             @if($product->is_available_for_rent)
-                                <a href="{{ route('rent.create.product', ['product' => $product->id]) }}" class="btn btn-success flex-grow-1 py-3 rounded-pill fw-bold text-white">
+                                <a href="{{ route('rent.create', $product->id) }}" class="btn btn-success flex-grow-1 py-3 rounded-pill fw-bold text-white">
                                     Sewa Sekarang
                                 </a>
                             @endif
@@ -111,18 +114,24 @@
 {{-- Reviews Section --}}
 <div class="row mt-5 pt-5 border-top">
     <div class="col-12">
-        <h3 class="fw-bold mb-4">Ulasan Pelanggan</h3>
-        @if($product->reviews->count() > 0)
+        <h3 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif;">Ulasan Pelanggan</h3>
+        
+        @php
+            $approvedReviews = $product->reviews->where('is_approved', true);
+        @endphp
+
+        @if($approvedReviews->count() > 0)
             <div class="row g-4">
-                @foreach($product->reviews->take(4) as $review)
+                @foreach($approvedReviews as $review)
                     <div class="col-md-6">
-                        <div class="card h-100 border-0 bg-light rounded-4 p-3">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 p-4" style="background: #fff;">
                             <div class="d-flex align-items-center mb-3">
-                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3" style="width: 40px; height: 40px;">
-                                    {{ substr($review->user->name, 0, 1) }}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3" 
+                                     style="width: 45px; height: 45px; background-color: var(--primary-color); color: white;">
+                                    {{ strtoupper(substr($review->user->name, 0, 1)) }}
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">{{ $review->user->name }}</h6>
+                                    <h6 class="fw-bold mb-0">{{ $review->masked_email }}</h6>
                                     <div class="text-warning small">
                                         @for($i=1; $i<=5; $i++)
                                             <i class="bi bi-star{{ $i <= $review->rating ? '-fill' : '' }}"></i>
@@ -131,19 +140,32 @@
                                 </div>
                                 <small class="text-muted ms-auto">{{ $review->created_at->diffForHumans() }}</small>
                             </div>
-                            <p class="text-muted mb-0">{{ $review->comment }}</p>
+                            <p class="text-muted mb-0" style="line-height: 1.6;">"{{ $review->comment }}"</p>
+                            
                             @if($review->image)
-                                <img src="{{ asset('storage/' . $review->image) }}" class="mt-3 rounded" style="height: 80px; width: auto; object-fit: cover;">
+                                <img src="{{ asset('storage/' . $review->image) }}" 
+                                     class="mt-3 rounded-4 shadow-sm" 
+                                     style="height: 120px; width: 120px; object-fit: cover; cursor: pointer;"
+                                     data-bs-toggle="modal" data-bs-target="#imgModal{{ $review->id }}">
+                                
+                                {{-- Lightbox Modal --}}
+                                <div class="modal fade" id="imgModal{{ $review->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content bg-transparent border-0">
+                                            <img src="{{ asset('storage/' . $review->image) }}" class="img-fluid rounded-4">
+                                        </div>
+                                    </div>
+                                </div>
                             @endif
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
-            <div class="text-center py-4 bg-light rounded-4">
-                <p class="text-muted mb-0">Belum ada ulasan untuk produk ini.</p>
+            <div class="text-center py-5 rounded-4" style="background: #fff; border: 2px dashed #eee;">
+                <i class="bi bi-chat-left-dots display-4 text-muted mb-3 d-block"></i>
+                <p class="text-muted mb-0">Belum ada ulasan untuk kebaya ini. Jadilah yang pertama memberikan ulasan!</p>
             </div>
         @endif
     </div>
 </div>
-@endsection

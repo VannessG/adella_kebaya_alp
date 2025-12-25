@@ -3,71 +3,109 @@
 @section('title', 'Riwayat Penyewaan')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <h1 class="fw-bold text mb-4">Riwayat Penyewaan</h1>
-            
-            @if(count($rents) > 0)
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>No. Sewa</th>
-                                        <th>Cabang</th>
-                                        <th>Periode</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($rents as $rent)
-                                        <tr>
-                                            <td class="fw-semibold">{{ $rent->rent_number }}</td>
-                                            <td>{{ $rent->branch->name }}</td>
-                                            <td>
-                                                <div>{{ $rent->start_date->format('d M Y') }}</div>
-                                                <div class="text-muted small">s/d {{ $rent->end_date->format('d M Y') }}</div>
-                                            </td>
-                                            <td class="fw-semibold text">Rp {{ number_format($rent->total_amount, 0, ',', '.') }}</td>
-                                            <td>
-                                                <span class="badge 
-                                                    @if($rent->status == 'returned') bg-success
-                                                    @elseif($rent->status == 'active') bg-info
-                                                    @elseif($rent->status == 'paid') bg-warning
-                                                    @elseif($rent->status == 'pending') bg-secondary
-                                                    @elseif($rent->status == 'overdue') bg-danger
-                                                    @elseif($rent->status == 'cancelled') bg-dark
-                                                    @endif">
-                                                    {{ $statusOptions[$rent->status] }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('rent.show', $rent->rent_number) }}" class="btn btn-sm btn-outline-primary">
-                                                    Detail
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            @else
-                <div class="text-center py-5">
-                    <div class="mb-4">
-                        <i class="bi bi-calendar-x display-1 text-muted"></i>
-                    </div>
-                    <h4 class="text-muted mb-3">Belum Ada Penyewaan</h4>
-                    <p class="text-muted mb-4">Anda belum memiliki riwayat penyewaan.</p>
-                    <a href="{{ route('rent.create') }}" class="btn">Sewa Sekarang</a>
-                </div>
-            @endif
+<h1 class="fw-bold mb-4">Riwayat Penyewaan</h1>
+
+@if(count($rents) > 0)
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3">No. Sewa</th>
+                            <th>Periode</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th class="pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($rents as $rent)
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">{{ $rent->rent_number }}</td>
+                            <td>
+                                <div class="small fw-bold">{{ $rent->start_date->format('d M Y') }}</div>
+                                <div class="text-muted small">s/d {{ $rent->end_date->format('d M Y') }}</div>
+                            </td>
+                            <td class="fw-bold" style="color: var(--primary-color);">Rp {{ number_format($rent->total_amount, 0, ',', '.') }}</td>
+                            <td>
+                                <span class="badge rounded-pill 
+                                    @if($rent->status == 'returned' || $rent->status == 'completed') bg-success 
+                                    @elseif($rent->status == 'pending') bg-secondary
+                                    @elseif($rent->status == 'cancelled') bg-dark
+                                    @else bg-info @endif">
+                                    {{ $statusOptions[$rent->status] ?? $rent->status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('rent.show', $rent->rent_number) }}" class="btn btn-sm btn-outline-custom">Detail</a>
+
+                                    @if($rent->status == 'completed' || $rent->status == 'returned')
+                                        @foreach($rent->products as $product)
+                                            {{-- Memanggil method dari Model Rent --}}
+                                            @if(!$rent->userProductReview($product->id))
+                                                <button class="btn btn-sm btn-primary-custom" data-bs-toggle="modal" data-bs-target="#revRent{{ $rent->id }}{{ $product->id }}">
+                                                    Ulas Kebaya
+                                                </button>
+
+                                                {{-- Modal Review Rent --}}
+                                                <div class="modal fade" id="revRent{{ $rent->id }}{{ $product->id }}" tabindex="-1">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content rounded-4 border-0 shadow">
+                                                            <form action="{{ route('reviews.store') }}" method="POST" enctype="multipart/form-data">
+                                                                @csrf
+                                                                <input type="hidden" name="rent_id" value="{{ $rent->id }}">
+                                                                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                                                                <div class="modal-header border-0">
+                                                                    <h5 class="fw-bold">Beri Ulasan Sewa</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                                </div>
+                                                                <div class="modal-body text-center">
+                                                                    <img src="{{ $product->image_url }}" class="rounded-3 mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                                                                    <h6 class="fw-bold mb-3">{{ $product->name }}</h6>
+                                                                    <div class="mb-3 text-start">
+                                                                        <label class="form-label fw-semibold">Rating</label>
+                                                                        <select name="rating" class="form-select border-0 bg-light">
+                                                                            <option value="5">⭐⭐⭐⭐⭐ (Sangat Puas)</option>
+                                                                            <option value="4">⭐⭐⭐⭐ (Bagus)</option>
+                                                                            <option value="3">⭐⭐⭐ (Cukup)</option>
+                                                                            <option value="2">⭐⭐ (Kurang)</option>
+                                                                            <option value="1">⭐ (Kecewa)</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="mb-3 text-start">
+                                                                        <label class="form-label fw-semibold">Komentar</label>
+                                                                        <textarea name="comment" class="form-control border-0 bg-light" rows="3" required placeholder="Bagaimana kondisi kebaya saat Anda sewa?"></textarea>
+                                                                    </div>
+                                                                    <div class="mb-3 text-start">
+                                                                        <label class="form-label fw-semibold">Foto (Opsional)</label>
+                                                                        <input type="file" name="image" class="form-control border-0 bg-light">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer border-0">
+                                                                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Skip</button>
+                                                                    <button type="submit" class="btn btn-primary-custom px-4">Kirim Ulasan</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
+@else
+    <div class="text-center py-5">
+        <h4 class="text-muted">Belum ada riwayat penyewaan.</h4>
+    </div>
+@endif
 @endsection

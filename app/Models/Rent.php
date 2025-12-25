@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Rent extends Model
 {
@@ -65,6 +66,20 @@ class Rent extends Model
         return $this->hasMany(Review::class);
     }
 
+    // Relasi untuk mengecek apakah user sudah me-review produk tertentu di order ini
+    public function userProductReview($productId)
+    {
+        // Cek apakah user sedang login untuk menghindari error pada tamu (guest)
+        if (!Auth::check()) {
+            return null;
+        }
+
+        return $this->reviews()
+            ->where('user_id', Auth::id()) // Lebih aman dan efisien
+            ->where('product_id', $productId)
+            ->first();
+    }
+
     public static function getStatusOptions()
     {
         return [
@@ -96,5 +111,16 @@ class Rent extends Model
             return $this->total_amount * 0.1 * $overdueDays; // 10% per hari
         }
         return 0;
+    }
+
+    public function calculateRentalDays()
+    {
+        if (!$this->start_date || !$this->end_date) return 0;
+        return $this->start_date->diffInDays($this->end_date);
+    }
+
+    public function payment()
+    {
+        return $this->morphOne(Payment::class, 'transaction');
     }
 }

@@ -76,22 +76,26 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($rent->products as $product)
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
-                                                         class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
-                                                    <div>
-                                                        <b>{{ $product->name }}</b>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">{{ $product->pivot->quantity }}</td>
-                                            <td class="text-end">Rp {{ number_format($product->pivot->price_at_rent, 0, ',', '.') }}</td>
-                                            <td class="text-end">Rp {{ number_format($product->pivot->subtotal, 0, ',', '.') }}</td>
-                                        </tr>
-                                    @endforeach
+                                    {{-- Cari bagian loop @foreach($rent->products as $product) --}}
+@foreach($rent->products as $product)
+    <tr>
+        <td>
+            <div class="d-flex align-items-center">
+                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
+                     class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                <div>
+                    <b>{{ $product->name }}</b>
+                </div>
+            </div>
+        </td>
+        <td class="text-center">{{ $product->pivot->quantity }}</td>
+        
+        {{-- PERBAIKAN DI SINI: Ganti price_at_rent menjadi price_per_day --}}
+        <td class="text-end">Rp {{ number_format($product->pivot->price_per_day, 0, ',', '.') }}</td>
+        
+        <td class="text-end">Rp {{ number_format($product->pivot->subtotal, 0, ',', '.') }}</td>
+    </tr>
+@endforeach
                                 </tbody>
                                 <tfoot>
                                     <tr>

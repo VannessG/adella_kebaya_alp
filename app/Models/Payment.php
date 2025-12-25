@@ -24,6 +24,17 @@ class Payment extends Model
         'snap_token',
     ];
 
+    public static function getStatusOptions()
+    {
+        return [
+            'pending' => 'Menunggu Pembayaran',
+            'success' => 'Pembayaran Berhasil',
+            'failed'  => 'Pembayaran Gagal',
+            'expired' => 'Kadaluarsa',
+            'denied'  => 'Ditolak',
+        ];
+    }
+
     protected $casts = [
         'amount' => 'decimal:2'
     ];
