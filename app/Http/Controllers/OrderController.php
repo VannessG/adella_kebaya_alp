@@ -148,6 +148,8 @@ class OrderController extends Controller
         'customer_address' => 'required|string',
         'delivery_type' => 'required|in:pickup,delivery',
         'payment_method_id' => 'required|exists:payment_methods,id',
+        // PERBAIKAN: city_id ditambahkan untuk validasi Same Day di Service
+        'city_id' => 'required_if:delivery_type,delivery',
         'district_id' => 'required_if:delivery_type,delivery',
     ]);
 
@@ -192,7 +194,16 @@ class OrderController extends Controller
     $shippingCost = 0;
     if ($request->delivery_type === 'delivery') {
         $originId = str_contains(strtolower($branch->name), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
-        $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, max($totalWeight, 1), $request->courier_code);
+        
+        // PERBAIKAN: Menambahkan parameter city_id ke service agar logika Same Day bisa membandingkan ID Kota
+        $costs = $this->rajaOngkirService->calculateShippingCost(
+            $originId, 
+            $request->district_id, 
+            max($totalWeight, 1), 
+            $request->courier_code,
+            $request->city_id
+        );
+
         foreach($costs as $c) {
             if($c['service'] == $request->courier_service) {
                 $shippingCost = $c['cost'];
@@ -265,30 +276,31 @@ class OrderController extends Controller
     // 3. AJAX API HITUNG ONGKIR
     // ==========================================
     public function getShippingCost(Request $request)
-    {
-        $request->validate([
-            'district_id' => 'required|integer',
-            'courier' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'district_id' => 'required',
+        'city_id'     => 'required',
+        'courier'     => 'required',
+    ]);
 
-        $branch = session('selected_branch');
-        $originId = str_contains(strtolower($branch->name ?? ''), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
+    $branch = session('selected_branch');
+    
+    // Identifikasi Cabang berdasarkan nama
+    $isBojonegoro = str_contains(strtolower($branch->name ?? ''), 'bojonegoro');
+    
+    // Sesuaikan ID District Asal: Bojonegoro (953), Waru/Sidoarjo (6626)
+    $originDistrictId = $isBojonegoro ? 953 : 6626;
 
-        // Hitung total berat dari session (untuk akurasi ongkir)
-        $totalWeight = 0;
-        $cart = session('is_direct_checkout') ? [session('direct_checkout_item')] : session('cart', []);
-        
-        foreach ($cart as $id => $details) {
-            $pid = is_array($details) ? ($details['id'] ?? $id) : $id;
-            $qty = is_array($details) ? ($details['quantity'] ?? 1) : $details;
-            $product = Product::find($pid);
-            if ($product) $totalWeight += ($product->weight ?? 1000) * $qty;
-        }
+    $costs = $this->rajaOngkirService->calculateShippingCost(
+        $originDistrictId, 
+        $request->input('district_id'), 
+        1000, 
+        $request->input('courier'),
+        $request->input('city_id') 
+    );
 
-        $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, max($totalWeight, 1), $request->courier);
-
-        return response()->json(['costs' => $costs]);
-    }
+    return response()->json(['costs' => $costs]);
+}
 
     // --- HELPER PRICE ---
     private function calculateDiscountedPrice($originalPrice, $discount)

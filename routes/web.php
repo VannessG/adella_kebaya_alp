@@ -101,10 +101,12 @@ Route::post('/sewa/{rent}/return', [RentController::class, 'return'])->name('ren
     Route::get('/payment/finish', [PaymentController::class, 'finish'])->name('payment.finish');
 
     // --- Dynamic RajaOngkir Routes ---
-    Route::get('/rajaongkir/provinces', [RentController::class, 'getProvinces'])->name('rajaongkir.provinces');
-    Route::get('/rajaongkir/cities/{provinceId}', [RentController::class, 'getCities'])->name('rajaongkir.cities');
-    Route::get('/rajaongkir/districts/{cityId}', [RentController::class, 'getDistricts'])->name('rajaongkir.districts');
-    Route::get('/rajaongkir/shipping', [RentController::class, 'getShippingCost'])->name('rajaongkir.shipping');
+    // --- Dynamic RajaOngkir Routes ---
+// Pastikan semua mengarah ke OrderController agar sinkron dengan perbaikan kita
+Route::get('/rajaongkir/provinces', [OrderController::class, 'getProvinces'])->name('rajaongkir.provinces');
+Route::get('/rajaongkir/cities/{provinceId}', [OrderController::class, 'getCities'])->name('rajaongkir.cities');
+Route::get('/rajaongkir/districts/{cityId}', [OrderController::class, 'getDistricts'])->name('rajaongkir.districts');
+Route::get('/rajaongkir/shipping', [OrderController::class, 'getShippingCost'])->name('rajaongkir.shipping');
 });
 
 /*

@@ -19,12 +19,14 @@ class RajaOngkirService
 
     public function getProvinces()
     {
-        // Cache selama 24 jam agar tidak menghabiskan kuota API
         return Cache::remember('ro_provinces_final', 1440, function () {
             try {
                 $response = Http::withoutVerifying()->withHeaders(['key' => $this->apiKey])->get($this->baseUrl . 'destination/province');
+                
                 return $response->json()['data'] ?? [];
-            } catch (\Exception $e) { return []; }
+            } catch (\Exception $e) { 
+                return []; 
+            }
         });
     }
 
@@ -48,52 +50,69 @@ class RajaOngkirService
         });
     }
 
-    public function calculateShippingCost($originDistrictId, $destinationDistrictId, $weight, $couriers = null)
-    {
-        try {
-            $couriers = $couriers ?: 'jne';
+    public function calculateShippingCost($originDistrictId, $destinationDistrictId, $weight, $couriers = null, $destinationCityId = null)
+{
+    try {
+        $couriers = $couriers ?: 'jne';
+        $branch = session('selected_branch');
+        $branchName = strtolower($branch->name ?? '');
+
+        // PERBAIKAN: Mapping City ID Asal agar MATCH dengan Input dari View
+        if (str_contains($branchName, 'bojonegoro')) {
+            $originCityId = 566; // ID Bojonegoro di log Anda
+        } else {
+            // Jika Waru (Sidoarjo), kita harus pastikan ID-nya sama dengan pilihan di dropdown Kota
+            // Coba gunakan 409 (Kab. Sidoarjo) atau sesuaikan dengan hasil log terminal Anda
+            $originCityId = 409; 
+        }
+
+        $response = Http::withoutVerifying()
+            ->timeout(15)
+            ->withHeaders(['key' => $this->apiKey, 'Content-Type' => 'application/x-www-form-urlencoded'])
+            ->asForm()
+            ->post($this->baseUrl . 'calculate/district/domestic-cost', [
+                'origin' => $originDistrictId,
+                'destination' => $destinationDistrictId,
+                'weight' => max((int)$weight, 1),
+                'courier' => $couriers
+            ]);
+
+        $formattedCosts = [];
+        if ($response->successful()) {
+            $results = $response->json()['data'] ?? [];
+
+            // DEBUG LOG: Cek di terminal saat pilih Sidoarjo
+            error_log("-----------------------------------------");
+            error_log("ASAL (CABANG): " . $originCityId . " | TUJUAN (INPUT): " . $destinationCityId);
             
-            // Backup ID Kota jika API Limit tercapai
-            $originCityId = ($originDistrictId == 953) ? 83 : (($originDistrictId == 6626) ? 409 : null);
+            $isSameCity = ($originCityId == $destinationCityId);
+            
+            error_log("HASIL: " . ($isSameCity ? "MATCH - SAME DAY MUNCUL" : "TIDAK MATCH"));
+            error_log("-----------------------------------------");
 
-            $response = Http::withoutVerifying()
-                ->timeout(15)
-                ->withHeaders(['key' => $this->apiKey, 'Content-Type' => 'application/x-www-form-urlencoded'])
-                ->asForm()
-                ->post($this->baseUrl . 'calculate/district/domestic-cost', [
-                    'origin' => $originDistrictId,
-                    'destination' => $destinationDistrictId,
-                    'weight' => max((int)$weight, 1),
-                    'courier' => $couriers
-                ]);
-
-            $formattedCosts = [];
-            if ($response->successful()) {
-                $resData = $response->json();
-                $results = $resData['data'] ?? [];
-                
-                $destCityId = $resData['meta']['destination_details']['city_id'] ?? null;
-                $isSameCity = ($originCityId && $destCityId && $originCityId == $destCityId);
-
-                foreach ($results as $row) {
-                    $formattedCosts[] = [
-                        'code' => $couriers,
-                        'name' => strtoupper($couriers),
-                        'service' => $row['service'] ?? 'REG',
-                        'description' => $row['description'] ?? 'Layanan Pengiriman',
-                        'cost' => (int)($row['cost'] ?? 0),
-                        'etd' => str_replace(' day', '', ($row['etd'] ?? '-'))
-                    ];
-                }
-
-                if ($couriers == 'lion' && $isSameCity) {
-                    $formattedCosts[] = [
-                        'code' => 'lion', 'name' => 'LION PARCEL', 'service' => 'SAME DAY',
-                        'description' => 'Sampai Hari Ini', 'cost' => 12000, 'etd' => '1'
-                    ];
-                }
+            foreach ($results as $row) {
+                $formattedCosts[] = [
+                    'code' => $couriers,
+                    'name' => strtoupper($couriers),
+                    'service' => $row['service'] ?? 'REG',
+                    'description' => $row['description'] ?? 'Layanan Pengiriman',
+                    'cost' => (int)($row['cost'] ?? 0),
+                    'etd' => str_replace([' day', ' days'], '', ($row['etd'] ?? '-'))
+                ];
             }
-            return $formattedCosts;
-        } catch (\Exception $e) { return []; }
-    }
+
+            if ($isSameCity) {
+                $formattedCosts[] = [
+                    'code' => $couriers, 
+                    'name' => strtoupper($couriers), 
+                    'service' => 'SAME DAY',
+                    'description' => 'Layanan Sampai Hari Ini (Internal)', 
+                    'cost' => 12000, 
+                    'etd' => '0-1'
+                ];
+            }
+        }
+        return $formattedCosts;
+    } catch (\Exception $e) { return []; }
+}
 }

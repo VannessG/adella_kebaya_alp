@@ -9,18 +9,14 @@
     </div>
 
     <div class="col-lg-8">
-        {{-- PASTIKAN TAG FORM MEMBUNGKUS SELURUH INPUT --}}
         <form action="{{ route('checkout') }}" method="POST" enctype="multipart/form-data" id="checkoutForm">
             @csrf
             
-            {{-- DATA ITEM: Diletakkan tepat di bawah @csrf agar pasti terkirim --}}
+            {{-- DATA ITEM --}}
             @if(isset($cartItems) && count($cartItems) > 0)
                 @foreach($cartItems as $item)
-                    {{-- Kita pakai name 'direct_products' untuk kedua kondisi (Cart/Direct) agar Controller mudah membaca --}}
                     <input type="hidden" name="direct_products[{{ $item['id'] }}]" value="{{ $item['quantity'] }}">
                 @endforeach
-            @else
-                <div class="alert alert-danger">Peringatan: Tidak ada produk yang terdeteksi untuk dicheckout.</div>
             @endif
 
             <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -37,6 +33,7 @@
                             <input type="text" name="customer_phone" class="form-control" value="{{ $user->phone }}" required>
                         </div>
 
+                        {{-- Bagian Wilayah --}}
                         <div id="delivery-fields" style="display: none;" class="row g-3 px-0 m-0">
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Provinsi</label>
@@ -49,7 +46,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Kota/Kabupaten</label>
-                                <select class="form-select" id="city_id" disabled>
+                                <select class="form-select" name="city_id" id="city_id" disabled>
                                     <option value="">-- Pilih Provinsi Dulu --</option>
                                 </select>
                             </div>
@@ -85,6 +82,7 @@
                         </label>
                     </div>
 
+                    {{-- Bagian Kurir --}}
                     <div id="courier-options" class="mt-4" style="display: none;">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -141,7 +139,6 @@
                 
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Pilih Promo / Diskon</label>
-                    {{-- Atribut form="checkoutForm" vital agar select ini terbaca oleh form di kolom kiri --}}
                     <select name="discount_id" id="discount_id" form="checkoutForm" class="form-select">
                         <option value="" data-amount="0">Tanpa Diskon</option>
                         @foreach($discounts as $d)
@@ -177,100 +174,149 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-        const subtotal = parseFloat($('#final-subtotal').val());
-        let currentShipping = 0;
+$(document).ready(function() {
 
-        function updateGrandTotal() {
-            const selectedOpt = $('#discount_id option:selected');
-            const discType = selectedOpt.data('type');
-            const discValue = parseFloat(selectedOpt.data('amount')) || 0;
-            
-            let potong = 0;
-            if (discType === 'percentage') {
-                potong = subtotal * (discValue / 100);
-            } else {
-                potong = discValue;
-            }
+    const subtotal = parseFloat($('#final-subtotal').val()) || 0;
+    let currentShipping = 0;
 
-            if (potong > 0) {
-                $('#discount-row').attr('style', 'display: flex !important');
-                $('#discount-display').text('- Rp ' + Math.round(potong).toLocaleString('id-ID'));
-            } else {
-                $('#discount-row').attr('style', 'display: none !important');
-            }
-
-            const grandTotal = (subtotal + currentShipping) - potong;
-            $('#total-payment').text('Rp ' + Math.max(0, Math.round(grandTotal)).toLocaleString('id-ID'));
+    function updateGrandTotal() {
+        const selectedOpt = $('#discount_id option:selected');
+        const discType = selectedOpt.data('type');
+        const discValue = parseFloat(selectedOpt.data('amount')) || 0;
+        
+        let potong = 0;
+        if (discType === 'percentage') {
+            potong = subtotal * (discValue / 100);
+        } else {
+            potong = discValue;
         }
 
-        // Logic Wilayah
-        $('#province_id').change(function() {
-            let id = $(this).val();
-            $('#city_id').html('<option>Loading...</option>').prop('disabled', true);
-            if(id) {
-                $.get('/rajaongkir/cities/' + id, function(data) {
+        if (potong > 0) {
+            $('#discount-row').attr('style', 'display: flex !important');
+            $('#discount-display').text('- Rp ' + Math.round(potong).toLocaleString('id-ID'));
+        } else {
+            $('#discount-row').attr('style', 'display: none !important');
+        }
+
+        const grandTotal = (subtotal + currentShipping) - potong;
+        $('#total-payment').text('Rp ' + Math.max(0, Math.round(grandTotal)).toLocaleString('id-ID'));
+    }
+
+    // 1. Pilih Provinsi -> Kota
+    $('#province_id').on('change', function() {
+        let id = $(this).val();
+        $('#city_id').html('<option value="">Loading...</option>').prop('disabled', true);
+        $('#district_id').html('<option value="">-- Pilih Kota Dulu --</option>').prop('disabled', true);
+        
+        if(id) {
+            $.get('/rajaongkir/cities/' + id)
+                .done(function(data) {
                     let opts = '<option value="">-- Pilih Kota --</option>';
-                    data.forEach(d => { opts += `<option value="${d.city_id || d.id}">${d.type || ''} ${d.city_name || d.name}</option>`; });
-                    $('#city_id').html(opts).prop('disabled', false);
-                });
-            }
-        });
-
-        $('#city_id').change(function() {
-            let id = $(this).val();
-            $('#district_id').html('<option>Loading...</option>').prop('disabled', true);
-            if(id) {
-                $.get('/rajaongkir/districts/' + id, function(data) {
-                    let opts = '<option value="">-- Pilih Kecamatan --</option>';
-                    data.forEach(d => { opts += `<option value="${d.subdistrict_id || d.id}">${d.subdistrict_name || d.name}</option>`; });
-                    $('#district_id').html(opts).prop('disabled', false);
-                });
-            }
-        });
-
-        function calculateShipping() {
-            let distId = $('#district_id').val();
-            let courier = $('#courier_code').val();
-            if(!distId || !courier) return;
-            $.ajax({
-                url: "{{ route('rajaongkir.shipping') }}",
-                data: { district_id: distId, courier: courier },
-                success: function(response) {
-                    let costs = response.costs || [];
-                    $('#courier_service').empty().append('<option value="">Pilih Layanan...</option>');
-                    costs.forEach(c => {
-                        $('#courier_service').append(`<option value="${c.service}" data-cost="${c.cost}">${c.service} - Rp ${parseInt(c.cost).toLocaleString('id-ID')}</option>`);
+                    data.forEach(d => {
+                        let cid = d.city_id || d.id;
+                        opts += `<option value="${cid}">${d.type || ''} ${d.city_name || d.name}</option>`;
                     });
-                    $('#courier_service option:eq(1)').prop('selected', true).trigger('change');
-                }
-            });
+                    $('#city_id').html(opts).prop('disabled', false);
+                })
+                .fail(function(xhr) {
+                    alert("Gagal memuat kota. Status: " + xhr.status + " (Cek terminal untuk detail API)");
+                });
+        }
+    });
+
+    // 2. Pilih Kota -> Kecamatan
+    $('#city_id').on('change', function() {
+        let id = $(this).val();
+        $('#district_id').html('<option value="">Loading...</option>').prop('disabled', true);
+        if(id) {
+            $.get('/rajaongkir/districts/' + id)
+                .done(function(data) {
+                    let opts = '<option value="">-- Pilih Kecamatan --</option>';
+                    data.forEach(d => {
+                        let did = d.subdistrict_id || d.id;
+                        opts += `<option value="${did}">${d.subdistrict_name || d.name}</option>`;
+                    });
+                    $('#district_id').html(opts).prop('disabled', false);
+                })
+                .fail(function(xhr) {
+                    alert("Gagal memuat kecamatan. Status: " + xhr.status);
+                });
+        }
+    });
+
+    // 3. Fungsi Hitung Ongkir
+    function calculateShipping() {
+        let distId = $('#district_id').val();
+        let cityId = $('#city_id').val();
+        let courier = $('#courier_code').val();
+
+        if(!distId || distId === "" || distId === "Loading..." || !cityId || !courier) {
+            return; 
         }
 
-        $('#district_id, #courier_code').change(function() {
-            if ($('input[name="delivery_type"]:checked').val() === 'delivery') calculateShipping();
-        });
+        $('#courier_service').html('<option value="">Memuat layanan...</option>');
 
-        $('#courier_service').change(function() {
-            currentShipping = parseFloat($(this).find(':selected').data('cost')) || 0;
-            $('#shipping-cost-display').text('Rp ' + currentShipping.toLocaleString('id-ID'));
-            updateGrandTotal();
-        });
+        $.ajax({
+            url: "{{ route('rajaongkir.shipping') }}",
+            method: "GET",
+            data: { district_id: distId, city_id: cityId, courier: courier },
+            success: function(response) {
+                let html = '<option value="">-- Pilih Layanan --</option>';
+                if(response.costs && response.costs.length > 0) {
+                    response.costs.forEach(function(c) {
+                        let price = c.cost ? parseInt(c.cost).toLocaleString('id-ID') : '0';
+                        html += `<option value="${c.service}" data-cost="${c.cost}">${c.service} - Rp ${price}</option>`;
+                    });
+                    $('#courier_service').html(html);
+                    
+                    let foundSameDay = false;
+                    $("#courier_service option").each(function() {
+                        if($(this).val() === "SAME DAY") {
+                            $(this).prop('selected', true);
+                            foundSameDay = true;
+                        }
+                    });
 
-        $('input[name="delivery_type"]').change(function() {
-            if($(this).val() === 'delivery') {
-                $('#delivery-fields, #courier-options').slideDown();
-                $('#province_id, #city_id, #district_id').prop('required', true);
-            } else {
-                $('#delivery-fields, #courier-options').slideUp();
-                $('#province_id, #city_id, #district_id').prop('required', false);
-                currentShipping = 0;
-                $('#shipping-cost-display').text('Rp 0');
-                updateGrandTotal();
+                    if(!foundSameDay) $('#courier_service option:eq(1)').prop('selected', true);
+                    $('#courier_service').trigger('change');
+                } else {
+                    $('#courier_service').html('<option value="">Layanan tidak tersedia</option>');
+                }
+            },
+            error: function(xhr) {
+                // Memberikan informasi spesifik jika error terjadi (misal limit atau rute salah)
+                alert("Error Ongkir (" + xhr.status + "): Silakan periksa terminal PHP untuk detail RajaOngkir.");
+                $('#courier_service').html('<option value="">Error memuat layanan</option>');
             }
         });
+    }
 
-        $('#discount_id').change(updateGrandTotal);
+    // 4. Event Listeners
+    $('#district_id, #courier_code').on('change', function() {
+        if ($('input[name="delivery_type"]:checked').val() === 'delivery') {
+            calculateShipping();
+        }
     });
+
+    $('#courier_service').on('change', function() {
+        currentShipping = parseFloat($(this).find(':selected').data('cost')) || 0;
+        $('#shipping-cost-display').text('Rp ' + currentShipping.toLocaleString('id-ID'));
+        updateGrandTotal();
+    });
+
+    $('input[name="delivery_type"]').on('change', function() {
+        if($(this).val() === 'delivery') {
+            $('#delivery-fields, #courier-options').slideDown();
+            calculateShipping();
+        } else {
+            $('#delivery-fields, #courier-options').slideUp();
+            currentShipping = 0;
+            $('#shipping-cost-display').text('Rp 0');
+            updateGrandTotal();
+        }
+    });
+
+    $('#discount_id').on('change', updateGrandTotal);
+});
 </script>
 @endsection

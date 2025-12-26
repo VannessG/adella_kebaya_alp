@@ -69,7 +69,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Kota/Kabupaten</label>
-                                <select id="city_id" class="form-select" disabled><option value="">-- Pilih Provinsi Dulu --</option></select>
+                                {{-- PERBAIKAN: Menambahkan name="city_id" agar masuk ke validasi Controller --}}
+                                <select id="city_id" name="city_id" class="form-select" disabled><option value="">-- Pilih Provinsi Dulu --</option></select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-bold">Kecamatan</label>
@@ -122,7 +123,6 @@
                         <span id="rent-subtotal" class="fw-bold text-dark">Rp 0</span>
                     </div>
 
-                    {{-- Baris Potongan Diskon --}}
                     <div class="d-flex justify-content-between mb-2 text-danger" id="discount-row" style="display:none !important;">
                         <span>Potongan Diskon</span>
                         <span class="fw-bold" id="discount-display">- Rp 0</span>
@@ -162,7 +162,6 @@
     let currentShipping = 0;
 
     function calculateAll() {
-        // 1. Hitung Durasi Hari
         const start = new Date($('#start_date').val());
         const end = new Date($('#end_date').val());
         let days = 0;
@@ -171,11 +170,9 @@
         }
         $('#days-count').text(days);
 
-        // 2. Hitung Biaya Sewa Dasar
         const rentTotal = subtotalPerDay * days;
         $('#rent-subtotal').text('Rp ' + rentTotal.toLocaleString('id-ID'));
         
-        // 3. Hitung Diskon
         const selectedOpt = $('#discount_id option:selected');
         const discType = selectedOpt.data('type');
         const discValue = parseFloat(selectedOpt.data('amount')) || 0;
@@ -187,7 +184,6 @@
             potong = discValue;
         }
 
-        // Tampilkan/Sembunyikan Baris Diskon
         if (potong > 0) {
             $('#discount-row').attr('style', 'display: flex !important');
             $('#discount-display').text('- Rp ' + potong.toLocaleString('id-ID'));
@@ -195,12 +191,10 @@
             $('#discount-row').attr('style', 'display: none !important');
         }
 
-        // 4. Hitung Grand Total Akhir
         const finalTotal = (rentTotal + currentShipping) - potong;
         $('#total-payment').text('Rp ' + Math.max(0, finalTotal).toLocaleString('id-ID'));
     }
 
-    // Toggle Delivery
     $('input[name="delivery_type"]').change(function() {
         if(this.value === 'delivery') {
             $('#delivery-section').slideDown();
@@ -212,7 +206,6 @@
         }
     });
 
-    // Wilayah
     $('#province_id').change(function() {
         let id = $(this).val();
         $('#city_id').html('<option>Loading...</option>').prop('disabled', true);
@@ -220,7 +213,7 @@
             $.get('/rajaongkir/cities/' + id, function(data) {
                 let opts = '<option value="">-- Pilih Kota --</option>';
                 data.forEach(d => {
-                    opts += `<option value="${d.id}">${d.type || ''} ${d.name}</option>`;
+                    opts += `<option value="${d.city_id || d.id}">${d.type || ''} ${d.city_name || d.name}</option>`;
                 });
                 $('#city_id').html(opts).prop('disabled', false);
             });
@@ -234,23 +227,24 @@
             $.get('/rajaongkir/districts/' + id, function(data) {
                 let opts = '<option value="">-- Pilih Kecamatan --</option>';
                 data.forEach(d => {
-                    opts += `<option value="${d.id}">${d.name}</option>`;
+                    opts += `<option value="${d.subdistrict_id || d.id}">${d.subdistrict_name || d.name}</option>`;
                 });
                 $('#district_id').html(opts).prop('disabled', false);
             });
         }
     });
 
-    // Hitung Ongkir
     function calculateShipping() {
         let distId = $('#district_id').val();
+        let cityId = $('#city_id').val(); // AMBIL CITY ID
         let courier = $('#courier_code').val();
         if(!distId) return;
 
         $('#courier_service').html('<option>Loading...</option>');
         $.ajax({
             url: "{{ route('rajaongkir.shipping') }}",
-            data: { district_id: distId, courier: courier, weight: 1000 },
+            // PERBAIKAN: Menambahkan city_id ke AJAX call
+            data: { district_id: distId, city_id: cityId, courier: courier, weight: 1000 },
             success: function(response) {
                 let costs = response.costs || [];
                 $('#courier_service').empty().append('<option value="">Pilih Layanan...</option>');
@@ -272,9 +266,7 @@
         calculateAll();
     });
 
-    // Trigger Perhitungan saat ada perubahan input
     $('#start_date, #end_date, #discount_id').change(calculateAll);
-    
     $(document).ready(calculateAll);
 </script>
 @endsection
