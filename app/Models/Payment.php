@@ -28,6 +28,7 @@ class Payment extends Model
     {
         return [
             'pending' => 'Menunggu Pembayaran',
+            'processing' => 'Menunggu Verifikasi Admin',
             'success' => 'Pembayaran Berhasil',
             'failed'  => 'Pembayaran Gagal',
             'expired' => 'Kadaluarsa',

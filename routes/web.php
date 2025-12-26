@@ -130,12 +130,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     
     // Category Management Admin
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    // Cari bagian ini di web.php dan pastikan seperti ini:
+Route::get('/categories', [CategoryController::class, 'adminIndex'])->name('categories.index');
     Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('/rajaongkir/cities/{provinceId}', [OrderController::class, 'getCities']);
+    Route::get('/rajaongkir/districts/{cityId}', [OrderController::class, 'getDistricts']);
+    Route::get('/rajaongkir/shipping', [OrderController::class, 'getShippingCost']);
 
     // Order Management Admin (Pembelian)
     Route::get('/orders', [OrderController::class, 'adminIndex'])->name('orders.index');
@@ -156,6 +161,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Payment Management Admin
     Route::get('/payments', [PaymentController::class, 'adminIndex'])->name('payments.index');
     Route::put('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])->name('payments.update-status');
+    Route::post('/payments/{payment}/verify', [PaymentController::class, 'verifyPayment'])->name('payments.verify');
     
     // Shipment Management Admin
     Route::get('/shipments', [OrderController::class, 'shipmentsIndex'])->name('shipments.index');

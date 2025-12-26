@@ -22,16 +22,6 @@
                             @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label for="code" class="form-label">Kode Diskon (Opsional)</label>
-                            <input type="text" class="form-control @error('code') is-invalid @enderror" 
-                                   id="code" name="code" value="{{ old('code') }}">
-                            <div class="form-text">Kosongkan untuk diskon otomatis berlaku</div>
-                            @error('code')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">

@@ -76,26 +76,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {{-- Cari bagian loop @foreach($rent->products as $product) --}}
-@foreach($rent->products as $product)
-    <tr>
-        <td>
-            <div class="d-flex align-items-center">
-                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
-                     class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
-                <div>
-                    <b>{{ $product->name }}</b>
-                </div>
-            </div>
-        </td>
-        <td class="text-center">{{ $product->pivot->quantity }}</td>
-        
-        {{-- PERBAIKAN DI SINI: Ganti price_at_rent menjadi price_per_day --}}
-        <td class="text-end">Rp {{ number_format($product->pivot->price_per_day, 0, ',', '.') }}</td>
-        
-        <td class="text-end">Rp {{ number_format($product->pivot->subtotal, 0, ',', '.') }}</td>
-    </tr>
-@endforeach
+                                    @foreach($rent->products as $product)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
+                                                     class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                <div>
+                                                    <b>{{ $product->name }}</b>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ $product->pivot->quantity }}</td>
+                                        <td class="text-end">Rp {{ number_format($product->pivot->price_per_day, 0, ',', '.') }}</td>
+                                        <td class="text-end">Rp {{ number_format($product->pivot->subtotal, 0, ',', '.') }}</td>
+                                    </tr>
+                                    @endforeach
                                 </tbody>
                                 <tfoot>
                                     <tr>
@@ -121,35 +117,55 @@
                 </div>
             </div>
 
+            {{-- PERBAIKAN: BLOK STATUS PEMBAYARAN DAN FORM RE-UPLOAD --}}
             @if($rent->payment)
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="card-title mb-0 fw-semibold">Informasi Pembayaran</h5>
+                    <h5 class="card-title mb-0 fw-semibold">Status Pembayaran</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
                             <p class="mb-2"><strong>Metode Pembayaran:</strong> {{ $rent->payment->paymentMethod->name }}</p>
                             <p class="mb-2"><strong>Status:</strong> 
                                 <span class="badge 
                                     @if($rent->payment->status == 'success') bg-success
-                                    @elseif($rent->payment->status == 'pending') bg-warning
+                                    @elseif($rent->payment->status == 'processing') bg-warning text-dark
                                     @elseif($rent->payment->status == 'failed') bg-danger
                                     @elseif($rent->payment->status == 'expired') bg-secondary
                                     @endif">
                                     {{ \App\Models\Payment::getStatusOptions()[$rent->payment->status] }}
                                 </span>
                             </p>
-                            <p class="mb-2"><strong>Total Bayar:</strong> Rp {{ number_format($rent->payment->amount, 0, ',', '.') }}</p>
-                            @if($rent->payment->paid_at)
-                                <p class="mb-0"><strong>Tanggal Bayar:</strong> {{ $rent->payment->paid_at->format('d M Y H:i') }}</p>
+                            
+                            {{-- LOGIKA RE-UPLOAD JIKA GAGAL/DITOLAK --}}
+                            @if($rent->payment->paymentMethod->type === 'transfer' && ($rent->payment->status === 'pending' || $rent->payment->status === 'failed'))
+                                @if($rent->payment->status === 'failed')
+                                <div class="alert alert-danger py-2 mt-3 small">
+                                    <i class="bi bi-exclamation-triangle"></i> Bukti transfer ditolak admin. Silakan upload ulang bukti yang benar.
+                                </div>
+                                @endif
+                                
+                                <form action="{{ route('payment.rent.process', $rent->id) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+                                    @csrf
+                                    <input type="hidden" name="payment_method_id" value="{{ $rent->payment->payment_method_id }}">
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold">Upload Bukti Baru:</label>
+                                        <input type="file" name="payment_proof" class="form-control form-control-sm" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm">
+                                        <i class="bi bi-upload"></i> {{ $rent->payment->status === 'failed' ? 'Upload Ulang Bukti' : 'Kirim Bukti' }}
+                                    </button>
+                                </form>
                             @endif
                         </div>
-                        @if($rent->payment->payment_proof)
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Bukti Pembayaran:</strong></p>
-                            <img src="{{ asset('storage/' . $rent->payment->payment_proof) }}" 
-                                 alt="Bukti Pembayaran" class="img-fluid rounded shadow-sm" style="max-height: 200px;">
+
+                        @if($rent->payment->proof_image)
+                        <div class="col-md-5 text-end">
+                            <p class="small text-muted mb-1 text-start">Bukti terkirim:</p>
+                            <img src="{{ asset('storage/' . $rent->payment->proof_image) }}" 
+                                 class="img-fluid rounded border shadow-sm @if($rent->payment->status === 'failed') border-danger border-3 @endif" 
+                                 style="max-height: 120px; @if($rent->payment->status === 'failed') filter: grayscale(1); @endif">
                         </div>
                         @endif
                     </div>
@@ -178,28 +194,20 @@
                             <i class="bi bi-credit-card"></i> Bayar Sekarang
                         </a>
                     @endif
-                    @if($rent->shipment && $rent->shipment->chatRoom)
-                        <a href="{{ route('chat.show', $rent->shipment->chatRoom->token) }}" 
-                        class="btn btn-info" target="_blank">
-                            <i class="bi bi-chat"></i> Chat Driver
-                        </a>
-                    @endif
                 </div>
             </div>
 
+            {{-- SECTION PILIH METODE PEMBAYARAN DI AWAL --}}
             @if(!$rent->payment && $rent->status == 'pending')
             <div class="card shadow-sm mt-4" id="payment-section">
                 <div class="card-header bg-light">
                     <h5 class="card-title mb-0 fw-semibold">Pembayaran</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('payment.process') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('payment.rent.process', $rent->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <input type="hidden" name="payable_type" value="rent">
-                        <input type="hidden" name="payable_id" value="{{ $rent->id }}">
-                        
                         <div class="mb-3">
-                            <label class="form-label">Pilih Metode Pembayaran</label>
+                            <label class="form-label fw-bold">Pilih Metode Pembayaran</label>
                             @foreach($paymentMethods as $method)
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="radio" name="payment_method_id" 
@@ -207,9 +215,6 @@
                                        data-type="{{ $method->type }}" required>
                                 <label class="form-check-label" for="method{{ $method->id }}">
                                     <strong>{{ $method->name }}</strong>
-                                    @if($method->instructions)
-                                        <br><small class="text-muted">{{ $method->instructions }}</small>
-                                    @endif
                                 </label>
                             </div>
                             @endforeach
@@ -217,18 +222,12 @@
 
                         <div id="transfer-proof" style="display: none;">
                             <div class="mb-3">
-                                <label for="payment_proof" class="form-label">Upload Bukti Transfer</label>
+                                <label for="payment_proof" class="form-label fw-bold">Upload Bukti Transfer</label>
                                 <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/*">
-                                <div class="form-text">Upload screenshot bukti transfer Anda</div>
                             </div>
                         </div>
 
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> 
-                            Setelah pembayaran, admin akan memverifikasi pembayaran Anda. Status akan diperbarui secara otomatis.
-                        </div>
-
-                        <button type="submit" class="btn btn-lg w-100">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm mt-3">
                             <i class="bi bi-credit-card"></i> Proses Pembayaran
                         </button>
                     </form>
@@ -243,15 +242,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     const paymentMethods = document.querySelectorAll('input[name="payment_method_id"]');
     const transferProof = document.getElementById('transfer-proof');
+    const proofInput = document.getElementById('payment_proof');
     
     paymentMethods.forEach(method => {
         method.addEventListener('change', function() {
             if (this.dataset.type === 'transfer') {
                 transferProof.style.display = 'block';
-                document.getElementById('payment_proof').required = true;
+                if(proofInput) proofInput.required = true;
             } else {
                 transferProof.style.display = 'none';
-                document.getElementById('payment_proof').required = false;
+                if(proofInput) proofInput.required = false;
             }
         });
     });

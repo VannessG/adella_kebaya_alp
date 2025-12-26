@@ -49,12 +49,6 @@ class PaymentController extends Controller
 
     private function processPayment(Request $request, $type, $id)
     {
-        // --- JEBAKAN 1: CEK APAKAH TOMBOL BERFUNGSI ---
-        // Kalau layar jadi putih menampilkan data ini, berarti Route benar.
-        // Kalau layar tidak berubah (cuma reload), berarti tombol form HTML salah.
-        // (Saya matikan dulu biar kita cek validasi)
-        dd('JEBAKAN 1: Request Masuk', $request->all()); 
-
         // Validasi Form
         $request->validate([
             'payment_method_id' => 'required|exists:payment_methods,id',
@@ -65,15 +59,6 @@ class PaymentController extends Controller
             $payable = Order::where('user_id', Auth::id())->findOrFail($id);
         } else {
             $payable = Rent::where('user_id', Auth::id())->findOrFail($id);
-        }
-
-        // Cek pembayaran ganda
-        if ($payable->payment) {
-             if($payable->payment->status == 'pending'){
-                 // --- JEBAKAN 2: PEMBAYARAN SUDAH ADA ---
-                 dd('JEBAKAN 2: STOP! Data pembayaran ternyata SUDAH ADA di database (Status Pending). Cek tabel payments!', $payable->payment);
-             }
-             dd('JEBAKAN 3: STOP! Pembayaran ini sudah lunas/selesai.', $payable->payment);
         }
 
         $paymentMethod = PaymentMethod::find($request->payment_method_id);
@@ -87,24 +72,23 @@ class PaymentController extends Controller
             'payer_phone' => $request->customer_phone ?? Auth::user()->phone,
         ];
 
+        // Penanganan upload bukti transfer
         if ($paymentMethod->type === 'transfer' && $request->hasFile('payment_proof')) {
+            // Hapus file lama jika ada (untuk fitur re-upload)
+            if ($payable->payment && $payable->payment->proof_image) {
+                Storage::disk('public')->delete($payable->payment->proof_image);
+            }
+
             $proofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
             $paymentData['proof_image'] = $proofPath;
-            $paymentData['status'] = 'processing'; 
+            $paymentData['status'] = 'processing'; // Menandakan sedang dicek admin
         }
 
-        // --- JEBAKAN 4 (UTAMA): SIAP SIMPAN ---
-        // Jika layar putih muncul tulisan ini, berarti Validasi lolos dan siap simpan.
-        dd('JEBAKAN 4: SIAP SIMPAN KE DATABASE', $paymentData); 
-
-        try {
-            // EKSEKUSI SIMPAN
-            $payment = $payable->payments()->create($paymentData);
-            
-        } catch (\Exception $e) {
-            // --- JEBAKAN 5: ERROR DATABASE ---
-            dd('JEBAKAN 5: GAGAL SAAT CREATE! Pesan Error:', $e->getMessage());
-        }
+        // Simpan atau Update (Polymorphic creation)
+        $payment = $payable->payments()->updateOrCreate(
+            ['transaction_id' => $payable->id, 'transaction_type' => get_class($payable)],
+            $paymentData
+        );
 
         // LOGIKA MIDTRANS
         if ($paymentMethod->type === 'qris') {
@@ -112,23 +96,43 @@ class PaymentController extends Controller
                 $midtransService = new MidtransService();
                 $snapToken = $midtransService->createTransaction($payment);
                 $payment->update(['snap_token' => $snapToken]);
+                return redirect()->route('payment.pay', $payment->payment_number);
             } catch (\Exception $e) {
-                // Jangan hapus data, tampilkan error saja
-                dd('JEBAKAN 6: MIDTRANS ERROR', $e->getMessage());
+                return back()->with('error', 'Gagal memproses Midtrans: ' . $e->getMessage());
             }
-        }
-
-        // Redirect
-        if ($paymentMethod->type === 'qris') {
-             return redirect()->route('payment.pay', $payment->payment_number);
         }
 
         $redirectRoute = $type === 'order' ? 'pesanan.show' : 'rent.show';
         $redirectParam = $type === 'order' ? $payable->order_number : $payable->rent_number;
 
         return redirect()->route($redirectRoute, $redirectParam)
-            ->with('success', 'Bukti pembayaran berhasil diupload.');
+            ->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi admin.');
     }
+
+    // LOGIKA VERIFIKASI ADMIN (LENGKAP)
+    public function verifyPayment(Request $request, Payment $payment)
+    {
+        $action = $request->input('action'); // 'approve' atau 'reject'
+        
+        if ($action === 'approve') {
+            $payment->update(['status' => 'success']);
+            
+            // Otomatis update status transaksi terkait
+            $transaction = $payment->transaction;
+            if ($transaction instanceof Order) {
+                $transaction->update(['status' => 'processing']);
+            } elseif ($transaction instanceof Rent) {
+                $transaction->update(['status' => 'active']);
+            }
+            
+            return back()->with('success', 'Pembayaran disetujui! Status transaksi diperbarui.');
+        } else {
+            // Jika Reject
+            $payment->update(['status' => 'failed']);
+            return back()->with('error', 'Pembayaran ditolak. User diminta upload ulang.');
+        }
+    }
+
     public function pay($paymentNumber)
     {
         $payment = Payment::where('payment_number', $paymentNumber)->firstOrFail();
@@ -169,13 +173,12 @@ class PaymentController extends Controller
         
         $payment->update($validated);
         
-        // Jika pembayaran sukses, update status order/rent
         if ($validated['status'] === 'success') {
             $transaction = $payment->transaction;
             if ($transaction instanceof Order) {
                 $transaction->update(['status' => 'processing']);
             } elseif ($transaction instanceof Rent) {
-                $transaction->update(['status' => 'confirmed']);
+                $transaction->update(['status' => 'active']); // Diubah ke active agar sinkron dengan status sewa
             }
         }
         

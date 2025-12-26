@@ -10,10 +10,11 @@
     </div>
     <div class="d-flex align-items-center bg-white shadow-sm px-4 py-2 rounded-pill">
         <i class="bi bi-shop text-primary me-2 fs-5"></i>
-        <span class="fw-semibold">{{ $branch->city ?? 'All Branches' }}</span>
+        <span class="fw-semibold">{{ $branch->name ?? 'All Branches' }}</span>
     </div>
 </div>
 
+{{-- Row Statistik Utama --}}
 <div class="row g-4 mb-5">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 bg-primary text-white" style="background: linear-gradient(135deg, var(--primary-color), #5a3207);">
@@ -34,22 +35,25 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 bg-white">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="text-muted mb-0">Total Produk</p>
-                        <h2 class="fw-bold mb-0 text-dark">{{ $stats['total_products'] }}</h2>
+        {{-- Statistik Kategori Terhubung ke Index Kategori --}}
+        <a href="{{ route('admin.categories.index') }}" class="text-decoration-none h-100">
+            <div class="card border-0 shadow-sm h-100 bg-white hover-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-0">Total Produk</p>
+                            <h2 class="fw-bold mb-0 text-dark">{{ $stats['total_products'] }}</h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center text-warning" style="width: 50px; height: 50px;">
+                            <i class="bi bi-box-seam fs-4"></i>
+                        </div>
                     </div>
-                    <div class="bg-warning bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center text-warning" style="width: 50px; height: 50px;">
-                        <i class="bi bi-box-seam fs-4"></i>
+                    <div class="mt-3 small text-muted">
+                        Dalam <span class="fw-bold text-primary">{{ $stats['total_categories'] }} Kategori</span>
                     </div>
-                </div>
-                <div class="mt-3 small text-muted">
-                    Dalam {{ $stats['total_categories'] }} Kategori
                 </div>
             </div>
-        </div>
+        </a>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 bg-white">
@@ -90,6 +94,7 @@
 </div>
 
 <div class="row g-4">
+    {{-- Tabel Pesanan Terbaru --}}
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
@@ -133,6 +138,7 @@
         </div>
     </div>
 
+    {{-- Grid Navigasi Cepat (Quick Actions) --}}
     <div class="col-lg-6">
         <div class="row g-3">
             <div class="col-6">
@@ -148,6 +154,22 @@
                     </div>
                 </a>
             </div>
+
+            {{-- PERBAIKAN: Tombol CRUD Kategori mengarah ke admin.categories.index --}}
+            <div class="col-6">
+                <a href="{{ route('admin.categories.index') }}" class="card bg-white border-0 shadow-sm h-100 text-decoration-none hover-card">
+                    <div class="card-body d-flex align-items-center p-4">
+                        <div class="bg-info text-white rounded-3 p-3 me-3">
+                            <i class="bi bi-tags fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">Manajemen Kategori</h6>
+                            <small class="text-muted">Tambah/Edit Kategori</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             <div class="col-6">
                 <a href="{{ route('admin.orders.index') }}" class="card bg-white border-0 shadow-sm h-100 text-decoration-none hover-card">
                     <div class="card-body d-flex align-items-center p-4">
@@ -161,6 +183,21 @@
                     </div>
                 </a>
             </div>
+
+            <div class="col-6">
+                <a href="{{ route('admin.payments.index') }}" class="card bg-white border-0 shadow-sm h-100 text-decoration-none hover-card">
+                    <div class="card-body d-flex align-items-center p-4">
+                        <div class="bg-danger text-white rounded-3 p-3 me-3">
+                            <i class="bi bi-credit-card fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">Pembayaran</h6>
+                            <small class="text-muted">Cek Bukti Transfer</small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             @if($stats['active_discount'])
             <div class="col-12">
                 <div class="card bg-warning bg-opacity-10 border-0 border-start border-warning border-4 shadow-sm">
@@ -181,4 +218,15 @@
         </div>
     </div>
 </div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
 @endsection

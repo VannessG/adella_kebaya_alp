@@ -86,7 +86,8 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $product->image }}" alt="{{ $product->name }}" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                    {{-- PERBAIKAN: Gunakan image_url --}}
+                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
                                                     <div>
                                                         <b>{{ $product->name }}</b>
                                                     </div>
@@ -112,6 +113,73 @@
                 </div>
             </div>
 
+            {{-- PERBAIKAN: Tambah blok Informasi Pembayaran (sama seperti detail sewa) --}}
+            {{-- Cari bagian Informasi Pembayaran dan ganti isinya dengan ini --}}
+@if($order->payments && $order->payments->isNotEmpty())
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0 fw-semibold">Informasi Pembayaran & Verifikasi Admin</h5>
+    </div>
+    <div class="card-body">
+        @foreach($order->payments as $payment)
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <p class="mb-2"><strong>Metode:</strong> {{ $payment->paymentMethod->name ?? 'N/A' }}</p>
+                <p class="mb-2"><strong>Status Pembayaran:</strong> 
+                    <span class="badge 
+                        @if($payment->status == 'success') bg-success 
+                        @elseif($payment->status == 'processing') bg-warning text-dark 
+                        @elseif($payment->status == 'failed') bg-danger 
+                        @else bg-secondary @endif">
+                        {{ \App\Models\Payment::getStatusOptions()[$payment->status] ?? $payment->status }}
+                    </span>
+                </p>
+                <p class="mb-2"><strong>Total Dibayar:</strong> Rp {{ number_format($payment->amount, 0, ',', '.') }}</p>
+
+                {{-- TOMBOL VERIFIKASI KHUSUS ADMIN --}}
+                @if($payment->status === 'processing' && $payment->proof_image)
+                <div class="mt-4 p-3 bg-light rounded border">
+                    <p class="small fw-bold mb-2">Tindakan Admin:</p>
+                    <div class="d-flex gap-2">
+                        <form action="{{ route('admin.payments.verify', $payment->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="action" value="approve">
+                            <button type="submit" class="btn btn-success btn-sm px-4">
+                                <i class="bi bi-check-lg"></i> Approve
+                            </button>
+                        </form>
+                        <form action="{{ route('admin.payments.verify', $payment->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-outline-danger btn-sm px-4">
+                                <i class="bi bi-x-lg"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endif
+            </div>
+
+            @if($payment->proof_image)
+            <div class="col-md-6 text-md-end">
+                <p class="mb-2 small fw-bold">Bukti Transfer:</p>
+                <a href="{{ asset('storage/' . $payment->proof_image) }}" target="_blank">
+                    <img src="{{ asset('storage/' . $payment->proof_image) }}" 
+                         class="img-fluid rounded border shadow-sm @if($payment->status === 'failed') border-danger border-4 @endif" 
+                         style="max-height: 250px; cursor: zoom-in;">
+                </a>
+                @if($payment->status === 'failed')
+                    <div class="text-danger small mt-1 fw-bold">BUKTI DITOLAK - Menunggu Re-upload</div>
+                @endif
+            </div>
+            @endif
+        </div>
+        @if(!$loop->last) <hr> @endif
+        @endforeach
+    </div>
+</div>
+@endif
+
             <div class="d-flex justify-content-between">
                 <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Kembali ke Daftar Pesanan
@@ -133,7 +201,7 @@
                     <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="d-inline">
                         @csrf
                         @method('PUT')
-                        <select name="status" class="form-select" onchange="this.form.submit()">
+                        <select name="status" class="form-select shadow-none" onchange="this.form.submit()">
                             <option value="">Ubah Status</option>
                             @foreach($statusOptions as $value => $label)
                                 @if($value != $order->status)

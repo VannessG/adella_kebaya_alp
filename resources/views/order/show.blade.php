@@ -83,7 +83,8 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $product->image }}" alt="{{ $product->name }}" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                    {{-- PERBAIKAN: Gunakan image_url --}}
+                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
                                                     <div>
                                                         <b>{{ $product->name }}</b>
                                                     </div>
@@ -108,6 +109,64 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Cari bagian Informasi Pembayaran dan pastikan logic re-upload aktif --}}
+{{-- Cari bagian Informasi Pembayaran dan ganti loop-nya dengan ini --}}
+@if($order->payments && $order->payments->isNotEmpty())
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <h5 class="card-title mb-0 fw-semibold">Status Pembayaran</h5>
+    </div>
+    <div class="card-body">
+        @foreach($order->payments as $payment)
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <p class="mb-2"><strong>Metode:</strong> {{ $payment->paymentMethod->name }}</p>
+                    <p class="mb-2"><strong>Status:</strong> 
+                        <span class="badge 
+                            @if($payment->status == 'success') bg-success 
+                            @elseif($payment->status == 'processing') bg-warning text-dark 
+                            @elseif($payment->status == 'failed') bg-danger 
+                            @else bg-secondary @endif">
+                            {{ \App\Models\Payment::getStatusOptions()[$payment->status] }}
+                        </span>
+                    </p>
+                    
+                    {{-- Form Upload/Re-upload jika metode Transfer --}}
+                    @if($payment->paymentMethod->type === 'transfer' && ($payment->status === 'pending' || $payment->status === 'failed'))
+                        @if($payment->status === 'failed')
+                        <div class="alert alert-danger py-2 mt-3 small">
+                            <i class="bi bi-exclamation-triangle"></i> Bukti ditolak admin. Silakan upload bukti baru yang valid.
+                        </div>
+                        @endif
+
+                        <form action="{{ route('payment.order.process', $order->id) }}" method="POST" enctype="multipart/form-data" class="mt-3">
+                            @csrf
+                            <input type="hidden" name="payment_method_id" value="{{ $payment->payment_method_id }}">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Upload Bukti Transfer Baru:</label>
+                                <input type="file" name="payment_proof" class="form-control form-control-sm" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm">
+                                <i class="bi bi-upload"></i> {{ $payment->status === 'failed' ? 'Upload Ulang Bukti' : 'Kirim Bukti Pembayaran' }}
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
+                @if($payment->proof_image)
+                <div class="col-md-5 text-end">
+                    <p class="small text-muted mb-1">Bukti Terkirim:</p>
+                    <img src="{{ asset('storage/' . $payment->proof_image) }}" 
+                         class="img-fluid rounded border shadow-sm @if($payment->status === 'failed') border-danger border-3 @endif" 
+                         style="max-height: 120px; @if($payment->status === 'failed') filter: grayscale(1); @endif">
+                </div>
+                @endif
+            </div>
+        @endforeach
+    </div>
+</div>
+@endif
 
             <div class="d-flex justify-content-between">
                 <a href="{{ url('/pesanan') }}" class="btn btn-outline-secondary">

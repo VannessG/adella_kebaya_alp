@@ -423,22 +423,95 @@ class OrderController extends Controller
      * Halaman form buat pesanan manual oleh admin
      */
     public function createAdmin()
-    {
-        $products = Product::where('stock', '>', 0)->get();
-        $branches = \App\Models\Branch::all();
-        $paymentMethods = PaymentMethod::where('is_active', true)->get();
+{
+    // Ambil produk yang stoknya ada dan sesuai cabang yang dipilih (jika ada filter cabang)
+    $branch = session('selected_branch');
+    $products = Product::where('stock', '>', 0)
+        ->when($branch, function($q) use ($branch) {
+            return $q->where('branch_id', $branch->id);
+        })->get();
 
-        return view('admin.orders.create', compact('products', 'branches', 'paymentMethods'));
-    }
+    $branches = \App\Models\Branch::all();
+    $paymentMethods = PaymentMethod::where('is_active', true)->get();
+    
+    // PERBAIKAN: Ambil data provinsi agar view tidak error
+    $provinces = $this->rajaOngkirService->getProvinces();
+
+    return view('admin.orders.create', compact('products', 'branches', 'paymentMethods', 'provinces'));
+}
 
     /**
      * Simpan pesanan yang dibuat oleh admin
      */
     public function storeAdmin(Request $request)
-    {
-        // Logika simpan pesanan admin biasanya mirip dengan checkout
-        // Namun disesuaikan jika admin bisa memilih user atau input manual
-        // Untuk sementara, Anda bisa mengarahkan ke logika checkout atau membuat logic khusus admin di sini.
-        return back()->with('error', 'Fitur simpan pesanan admin sedang dalam pengembangan.');
-    }
+{
+    // 1. Validasi Data
+    $request->validate([
+        'customer_name'    => 'required|string',
+        'customer_phone'   => 'required|string',
+        'customer_address' => 'required|string',
+        'delivery_type'    => 'required|in:pickup,delivery',
+        'products'         => 'required|array',
+        'products.*.id'    => 'required|exists:products,id',
+        'products.*.quantity' => 'required|integer|min:1',
+    ]);
+
+    return DB::transaction(function () use ($request) {
+        $branch = session('selected_branch');
+        $totalAmount = 0;
+        $orderProductsData = []; // Variabel penampung data produk
+
+        // 2. Hitung Total dan Siapkan Data Produk
+        foreach ($request->products as $item) {
+            $product = Product::findOrFail($item['id']);
+            
+            if ($product->stock < $item['quantity']) {
+                throw new \Exception("Stok produk {$product->name} tidak mencukupi.");
+            }
+
+            $subtotal = $product->price * $item['quantity'];
+            $totalAmount += $subtotal;
+
+            // PERBAIKAN: Tambahkan original_price di sini agar tidak NOT NULL constraint failed
+            $orderProductsData[$product->id] = [
+                'quantity'       => $item['quantity'],
+                'price'          => $product->price,
+                'original_price' => $product->price, // Mengisi kolom yang diwajibkan database
+            ];
+        }
+
+        // 3. Logika Ongkir
+        $shippingCost = 0;
+        if ($request->delivery_type === 'delivery') {
+            // Menghapus format Rupiah jika ada
+            $shippingCost = (int) str_replace(['Rp', '.', ' '], '', $request->shipping_cost);
+        }
+
+        // 4. Buat Order Utama
+        $order = Order::create([
+            'order_number'     => 'ADM-' . strtoupper(Str::random(5)) . '-' . time(),
+            'user_id'          => Auth::id(),
+            'branch_id'        => $branch->id,
+            'customer_name'    => $request->customer_name,
+            'customer_phone'   => $request->customer_phone,
+            'customer_address' => $request->customer_address,
+            'status'           => 'processing',
+            'order_date'       => now(),
+            'total_amount'     => $totalAmount + $shippingCost,
+            'shipping_cost'    => $shippingCost,
+            'delivery_type'    => $request->delivery_type,
+        ]);
+
+        // 5. Simpan ke Tabel Pivot & Potong Stok
+        foreach ($orderProductsData as $productId => $details) {
+            // Attach sekarang menyertakan original_price
+            $order->products()->attach($productId, $details);
+            
+            // Kurangi stok produk secara fisik
+            Product::find($productId)->decrement('stock', $details['quantity']);
+        }
+
+        return redirect()->route('admin.orders.index')->with('success', 'Pesanan admin berhasil dibuat.');
+    });
+}
 }
