@@ -28,16 +28,24 @@
                         <li class="nav-item px-2"><a class="nav-link {{ request()->routeIs('admin.orders.*') ? 'text-primary active' : '' }}" href="{{ route('admin.orders.index') }}">Pesanan</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->routeIs('admin.rents.*') ? 'text-primary active' : '' }}" href="{{ route('admin.rents.index') }}">Sewa</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->routeIs('admin.products.*') ? 'text-primary active' : '' }}" href="{{ route('admin.products.index') }}">Produk</a></li>
-                        <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active fw-bold' : '' }}" 
-           href="{{ route('admin.reports.index') }}">
-            <i class="bi bi-graph-up-arrow me-1"></i> Rekapan
-        </a>
-    </li>
+                        <li class="nav-item px-2">
+                            <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active fw-bold' : '' }}" href="{{ route('admin.reports.index') }}">
+                                <i class="bi bi-graph-up-arrow me-1"></i> Rekapan
+                            </a>
+                        </li>
+                        {{-- NAVBAR KEPEGAWAIAN BARU --}}
+                        <li class="nav-item dropdown px-2">
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.employees.*') || request()->routeIs('admin.shifts.*') ? 'text-primary active' : '' }}" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-people-fill me-1"></i> Kepegawaian
+                            </a>
+                            <ul class="dropdown-menu border-0 shadow-sm rounded-3">
+                                <li><a class="dropdown-item" href="{{ route('admin.employees.index') }}">Daftar Pegawai</a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.shifts.index') }}">Presensi & Shift</a></li>
+                            </ul>
+                        </li>
                     @else
                         <li class="nav-item px-2"><a class="nav-link {{ request()->is('/') ? 'text-primary active' : '' }}" href="{{ url('/') }}">Beranda</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->is('katalog*') ? 'text-primary active' : '' }}" href="{{ url('/katalog') }}">Katalog</a></li>
-                        {{-- Transaksi User Terbagi Dua --}}
                         <li class="nav-item px-2"><a class="nav-link {{ request()->is('pesanan*') ? 'text-primary active' : '' }}" href="{{ url('/pesanan') }}">Pesanan</a></li>
                         <li class="nav-item px-2"><a class="nav-link {{ request()->is('sewa*') ? 'text-primary active' : '' }}" href="{{ url('/sewa') }}">Sewa</a></li>
                     @endif
@@ -75,7 +83,6 @@
                 </div>
                 @endif
 
-                {{-- Cart Icon --}}
                 @auth
                     @if(auth()->user()->role === 'user')
                     <a href="{{ route('cart.index') }}" class="position-relative text-dark text-decoration-none me-2">
@@ -89,7 +96,6 @@
                     @endif
                 @endauth
 
-                {{-- Auth Dropdown --}}
                 @guest
                     <a href="{{ route('login') }}" class="btn btn-outline-custom px-4">Masuk</a>
                     <a href="{{ route('register') }}" class="btn btn-primary-custom px-4">Daftar</a>

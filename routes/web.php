@@ -14,6 +14,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentCallbackController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ShiftController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -163,6 +165,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/reviews', [ReviewController::class, 'adminIndex'])->name('reviews.index');
     Route::put('/reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
     Route::delete('/reviews/{review}', [ReviewController::class, 'destroyAdmin'])->name('reviews.destroy');
+
+    // Employee Management
+    Route::resource('employees', EmployeeController::class);
+
+    // Shift & Attendance Management
+    Route::get('shifts/attendance', [ShiftController::class, 'attendance'])->name('shifts.attendance');
+    Route::resource('shifts', ShiftController::class);
 
     Route::get('/rekapan', [ReportController::class, 'index'])->name('reports.index');
 });
