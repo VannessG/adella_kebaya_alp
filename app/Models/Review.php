@@ -4,8 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Review extends Model
-{
+class Review extends Model{
     protected $fillable = [
         'user_id', 'order_id', 'rent_id', 'product_id', 
         'rating', 'comment', 'image', 'is_approved'
@@ -20,13 +19,11 @@ class Review extends Model
     }
 
     // Accessor: Sensor email menjadi u*******@gmail.com
-    public function getMaskedEmailAttribute()
-    {
+    public function getMaskedEmailAttribute(){
         $email = $this->user->email;
         $parts = explode('@', $email);
         $name = $parts[0];
         $domain = $parts[1];
-        
         $maskedName = substr($name, 0, 1) . str_repeat('*', 7);
         return $maskedName . '@' . $domain;
     }

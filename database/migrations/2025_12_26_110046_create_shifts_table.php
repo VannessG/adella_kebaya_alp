@@ -14,7 +14,6 @@ return new class extends Migration
             $table->date('shift_day');
             $table->time('start_time');
             $table->time('end_time');
-            // Menyimpan data absensi dalam format JSON
             $table->json('attendance_data')->nullable(); 
             $table->timestamps();
         });

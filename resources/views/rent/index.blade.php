@@ -29,11 +29,11 @@
                             </td>
                             <td class="fw-bold" style="color: var(--primary-color);">Rp {{ number_format($rent->total_amount, 0, ',', '.') }}</td>
                             <td>
-                                <span class="badge rounded-pill 
-                                    @if($rent->status == 'returned' || $rent->status == 'completed') bg-success 
+                                <sspan class="badge 
+                                    @if($rent->status == 'completed') bg-success 
                                     @elseif($rent->status == 'pending') bg-secondary
-                                    @elseif($rent->status == 'cancelled') bg-dark
-                                    @else bg-info @endif">
+                                    @elseif($rent->status == 'cancelled') bg-danger
+                                    @else bg-warning text-dark @endif">
                                     {{ $statusOptions[$rent->status] ?? $rent->status }}
                                 </span>
                             </td>

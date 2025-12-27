@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
-{
+class Product extends Model{
     use HasFactory;
 
     protected $fillable = [
@@ -27,8 +26,7 @@ class Product extends Model
 
     protected $appends = ['image_url', 'discounted_price', 'is_discounted'];
 
-    public function getImageUrlAttribute()
-    {
+    public function getImageUrlAttribute(){
         if ($this->image) {
             if (filter_var($this->image, FILTER_VALIDATE_URL)) {
                 return $this->image;
@@ -60,8 +58,7 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 
-    public function getDiscountedPriceAttribute()
-    {
+    public function getDiscountedPriceAttribute(){
         $activeDiscount = Discount::where('is_active', true)
             ->whereDate('start_date', '<=', now())
             ->whereDate('end_date', '>=', now())
@@ -70,28 +67,23 @@ class Product extends Model
         if ($activeDiscount) {
             return $this->price - $activeDiscount->applyTo($this->price);
         }
-
         return $this->price;
     }
 
-    public function getIsDiscountedAttribute()
-    {
+    public function getIsDiscountedAttribute(){
         $activeDiscount = Discount::where('is_active', true)
             ->whereDate('start_date', '<=', now())
             ->whereDate('end_date', '>=', now())
             ->first();
-
         return $activeDiscount !== null;
     }
 
-    public function calculateRentPrice($days)
-    {
+    public function calculateRentPrice($days){
         $days = max($this->min_rent_days, min($days, $this->max_rent_days));
         return $this->rent_price_per_day * $days;
     }
 
-    public function getAverageRatingAttribute()
-    {
+    public function getAverageRatingAttribute(){
         return $this->reviews()->avg('rating') ?? 0;
     }
 }

@@ -136,9 +136,6 @@
                         <!-- Tombol Aksi -->
                         <div class="d-flex gap-2 mt-auto">
                             <a href="{{ url('/katalog/detail/' . $product->id) }}" class="btn btn-sm flex-fill">Detail</a>
-                            @if($product->is_available_for_rent)
-                            <a href="{{ route('rent.create.product', ['product' => $product->id]) }}" class="btn btn-outline-primary btn-sm flex-fill">Sewa</a>
-                            @endif
                         </div>
                     </div>
                 </div>

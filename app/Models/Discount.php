@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Discount extends Model
-{
+class Discount extends Model{
     use HasFactory;
 
     protected $fillable = [
@@ -27,15 +26,11 @@ class Discount extends Model
         'is_active' => 'boolean'
     ];
 
-    public function isActive()
-    {
-        return $this->is_active && 
-               now()->between($this->start_date, $this->end_date) &&
-               ($this->max_usage === null || $this->used_count < $this->max_usage);
+    public function isActive(){
+        return $this->is_active && now()->between($this->start_date, $this->end_date) && ($this->max_usage === null || $this->used_count < $this->max_usage);
     }
 
-    public function applyTo($amount)
-    {
+    public function applyTo($amount){
         if ($this->type === 'percentage') {
             return $amount * ($this->amount / 100);
         }

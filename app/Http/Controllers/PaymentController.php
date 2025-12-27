@@ -11,10 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Services\MidtransService;
 
-class PaymentController extends Controller
-{
-    public function orderPaymentForm($orderId)
-    {
+class PaymentController extends Controller{
+    public function orderPaymentForm($orderId){
         $order = Order::where('user_id', Auth::id())->findOrFail($orderId);
         $paymentMethods = PaymentMethod::where('is_active', true)->get();
         
@@ -25,8 +23,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function rentPaymentForm($rentId)
-    {
+    public function rentPaymentForm($rentId){
         $rent = Rent::where('user_id', Auth::id())->findOrFail($rentId);
         $paymentMethods = PaymentMethod::where('is_active', true)->get();
         
@@ -37,19 +34,15 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function processOrderPayment(Request $request, $orderId)
-    {
+    public function processOrderPayment(Request $request, $orderId){
         return $this->processPayment($request, 'order', $orderId);
     }
 
-    public function processRentPayment(Request $request, $rentId)
-    {
+    public function processRentPayment(Request $request, $rentId){
         return $this->processPayment($request, 'rent', $rentId);
     }
 
-    private function processPayment(Request $request, $type, $id)
-    {
-        // Validasi Form
+    private function processPayment(Request $request, $type, $id){
         $request->validate([
             'payment_method_id' => 'required|exists:payment_methods,id',
             'payment_proof' => 'required_if:payment_method_id,2|image|mimes:jpeg,png,jpg|max:2048'
@@ -62,7 +55,6 @@ class PaymentController extends Controller
         }
 
         $paymentMethod = PaymentMethod::find($request->payment_method_id);
-        
         $paymentData = [
             'payment_number' => 'PAY-' . time() . rand(100,999),
             'payment_method_id' => $request->payment_method_id,

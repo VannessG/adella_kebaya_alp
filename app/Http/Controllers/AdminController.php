@@ -8,12 +8,9 @@ use App\Models\Order;
 use App\Models\Rent;
 use App\Models\User;
 use App\Models\Discount;
-use Illuminate\Http\Request;
 
-class AdminController extends Controller
-{
-    public function dashboard()
-    {
+class AdminController extends Controller{
+    public function dashboard(){
         $branch = session('selected_branch');
         
         $stats = [

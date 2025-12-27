@@ -31,6 +31,10 @@ class User extends Authenticatable{
         ];
     }
 
+    public function branch(){
+        return $this->belongsTo(Branch::class);
+    }
+
     public function orders(){
         return $this->hasMany(Order::class);
     }
@@ -41,10 +45,6 @@ class User extends Authenticatable{
 
     public function reviews(){
         return $this->hasMany(Review::class);
-    }
-
-    public function branch(){
-        return $this->belongsTo(Branch::class);
     }
 
     public function isAdmin(){

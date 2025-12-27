@@ -3,85 +3,87 @@
 @section('title', 'Beranda')
 
 @section('content')
-<div class="card bg-dark text-white border-0 overflow-hidden mb-5 rounded-4 position-relative">
-    <div style="background: linear-gradient(45deg, #3a2611, #8B5E3C); height: 400px; width: 100%;"></div>
+<div class="card border-0 overflow-hidden mb-5 rounded-0 position-relative shadow-sm" style="background-color: var(--bg-surface);">
+    <div style="background: linear-gradient(45deg, #E6DED5, #FAF3E0); height: 450px; width: 100%;"></div>
     
-    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center p-4" style="background: rgba(0,0,0,0.3);">
-        <h1 class="display-3 fw-bold mb-3" style="font-family: 'Playfair Display', serif;">Elegan dalam Tradisi</h1>
-        <p class="lead mb-4" style="max-width: 600px;">Temukan koleksi kebaya eksklusif untuk momen terindah Anda. Tersedia untuk sewa dan beli di cabang {{ session('selected_branch')->city }}.</p>
+    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center p-4">
+        <h1 class="display-3 fw-normal mb-3 font-serif" style="color: var(--text-main); letter-spacing: 2px;">Elegan dalam Tradisi</h1>
+        <p class="lead mb-4 fw-light" style="max-width: 600px; color: var(--text-muted); font-size: 1.1rem;">
+            Temukan koleksi kebaya eksklusif untuk momen terindah Anda. Tersedia untuk sewa dan beli di butik kami di {{ session('selected_branch')->city ?? 'Kota Anda' }}.
+        </p>
         <div class="d-flex gap-3">
-            <a href="{{ url('/katalog') }}" class="btn btn-light rounded-pill px-4 py-2 fw-semibold">Lihat Katalog</a>
-            <a href="{{ route('rent.create') }}" class="btn btn-outline-light rounded-pill px-4 py-2">Mulai Sewa</a>
+            <a href="{{ url('/katalog') }}" class="btn btn-primary-custom px-5 py-3 fw-bold" style="letter-spacing: 2px;">LIHAT KOLEKSI</a>
         </div>
     </div>
 </div>
 
-@php
-    $activeDiscount = \App\Models\Discount::where('is_active', true)
-        ->whereDate('start_date', '<=', now())
-        ->whereDate('end_date', '>=', now())
-        ->first();
-@endphp
-
 @if($activeDiscount)
-<div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex align-items-center justify-content-between p-4 mb-5" role="alert" style="background-color: #FFF8E1;">
+<div class="alert border-0 shadow-sm rounded-0 d-flex align-items-center justify-content-between p-4 mb-5" role="alert" 
+     style="background-color: var(--accent-yellow); border-left: 4px solid #E3C08D;">
     <div class="d-flex align-items-center">
-        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-            <i class="bi bi-percent fs-3"></i>
+        <div class="text-dark rounded-circle d-flex align-items-center justify-content-center me-4" 
+             style="width: 60px; height: 60px; background-color: rgba(227, 192, 141, 0.2);">
+            <i class="bi bi-tag-fill fs-3" style="color: #B08D55;"></i>
         </div>
         <div>
-            <h5 class="fw-bold mb-0 text-dark">{{ $activeDiscount->name }}</h5>
+            <h5 class="fw-bold mb-1 font-serif text-dark">{{ $activeDiscount->name }}</h5>
             <p class="mb-0 text-muted small">
-                Diskon 
+                Dapatkan Potongan 
                 @if($activeDiscount->type === 'percentage')
-                    <span class="badge bg-danger">{{ $activeDiscount->amount }}%</span>
+                    <span class="fw-bold text-dark">{{ $activeDiscount->amount }}%</span>
                 @else
-                    <span class="badge bg-danger">Rp {{ number_format($activeDiscount->amount, 0, ',', '.') }}</span>
+                    <span class="fw-bold text-dark">Rp {{ number_format($activeDiscount->amount, 0, ',', '.') }}</span>
                 @endif
-                All Items! Berakhir {{ $activeDiscount->end_date->format('d M Y') }}.
+                untuk semua item. Penawaran berakhir {{ $activeDiscount->end_date->format('d M Y') }}.
             </p>
         </div>
     </div>
-    <a href="{{ url('/katalog') }}" class="btn btn-warning rounded-pill px-4 text-white fw-bold shadow-sm">Ambil Promo</a>
+    <a href="{{ url('/katalog') }}" class="btn btn-outline-custom px-4 rounded-0" style="font-size: 0.75rem;">AMBIL PROMO</a>
 </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-end mb-4">
+{{-- SECTION TITLE --}}
+<div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3" style="border-color: var(--border-color) !important;">
     <div>
-        <h2 class="fw-bold mb-1">Koleksi Terbaru</h2>
-        <p class="text-muted mb-0">Pilihan terbaik minggu ini untuk Anda</p>
+        <h2 class="fw-normal mb-1 font-serif text-uppercase" style="letter-spacing: 1px;">Koleksi Terbaru</h2>
+        <p class="text-muted mb-0 small">Kurasi pilihan terbaik minggu ini</p>
     </div>
-    <a href="{{ url('/katalog') }}" class="text-decoration-none fw-semibold" style="color: var(--primary-color);">Lihat Semua <i class="bi bi-arrow-right"></i></a>
+    <a href="{{ url('/katalog') }}" class="text-decoration-none fw-bold small text-uppercase" style="color: var(--text-main); letter-spacing: 1px;">
+        Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
+    </a>
 </div>
 
+{{-- PRODUCT GRID --}}
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
     @foreach ($featuredProducts as $product)
         <div class="col">
-            <div class="card h-100 product-card position-relative">
+            <div class="card h-100 border-0 shadow-sm rounded-0 position-relative product-card" style="background-color: var(--bg-surface);">
+                
+                {{-- Badge Promo (Jika Ada) --}}
                 @if($product->is_discounted)
-                    <span class="position-absolute top-0 start-0 badge bg-danger m-3 rounded-pill shadow-sm">Promo</span>
+                    <span class="position-absolute top-0 start-0 badge bg-white text-dark m-3 rounded-0 shadow-sm" 
+                          style="font-weight: 500; letter-spacing: 1px; border: 1px solid #EEE;">PROMO</span>
                 @endif
                 
-                <div class="ratio ratio-1x1 bg-light">
-                    <img src="{{ $product->image_url }}" class="card-img-top object-fit-cover" alt="{{ $product->name }}">
+                {{-- Product Image --}}
+                <div class="ratio ratio-1x1 bg-light overflow-hidden">
+                    <img src="{{ $product->image_url }}" class="card-img-top object-fit-cover" alt="{{ $product->name }}" 
+                         style="transition: transform 0.5s ease;">
                 </div>
                 
-                <div class="card-body d-flex flex-column">
-                    <small class="text-muted mb-1">{{ $product->category->name ?? 'Kebaya' }}</small>
-                    <h5 class="card-title fw-bold text-truncate">{{ $product->name }}</h5>
+                <div class="card-body d-flex flex-column p-4 text-center">
+                    <small class="text-muted mb-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">{{ $product->category->name ?? 'Kebaya' }}</small>
+                    <h5 class="card-title fw-normal font-serif text-truncate mb-3" style="font-size: 1.1rem;">{{ $product->name }}</h5>
                     
-                    <div class="mt-auto pt-3 d-flex justify-content-between align-items-end">
-                        <div>
-                            @if($product->is_discounted)
-                                <small class="text-decoration-line-through text-muted" style="font-size: 0.8rem;">Rp {{ number_format($product->price, 0, ',', '.') }}</small>
-                                <div class="fw-bold text-danger">Rp {{ number_format($product->discounted_price, 0, ',', '.') }}</div>
-                            @else
-                                <div class="fw-bold" style="color: var(--primary-color);">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
-                            @endif
-                        </div>
-                        <a href="{{ url('/katalog/detail/' . $product->id) }}" class="btn btn-outline-custom btn-sm rounded-circle" style="width: 35px; height: 35px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-arrow-right"></i>
-                        </a>
+                    <div class="mt-auto">
+                        @if($product->is_discounted)
+                            <div class="text-decoration-line-through text-muted small mb-1">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
+                            <div class="fw-bold text-dark">Rp {{ number_format($product->discounted_price, 0, ',', '.') }}</div>
+                        @else
+                            <div class="fw-bold text-dark">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
+                        @endif
+                        
+                        <a href="{{ url('/katalog/detail/' . $product->id) }}" class="btn btn-link text-decoration-none text-muted small mt-2 p-0 stretched-link">LIHAT DETAIL</a>
                     </div>
                 </div>
             </div>

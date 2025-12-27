@@ -7,14 +7,11 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
-class IsAdmin
-{
-    public function handle(Request $request, Closure $next): Response
-    {
+class IsAdmin{
+    public function handle(Request $request, Closure $next): Response{
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             abort(403, 'Access denied — Admins only.');
         }
-
         return $next($request);
     }
 }

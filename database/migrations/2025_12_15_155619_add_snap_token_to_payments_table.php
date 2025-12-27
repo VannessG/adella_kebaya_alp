@@ -7,16 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up()
-{
-    Schema::table('payments', function (Blueprint $table) {
-        $table->string('snap_token')->nullable()->after('payment_number');
-    });
-}
+    {
+        Schema::table('payments', function (Blueprint $table) {
+            $table->string('snap_token')->nullable()->after('payment_number');
+        });
+    }
 
-public function down()
-{
-    Schema::table('payments', function (Blueprint $table) {
-        $table->dropColumn('snap_token');
-    });
-}
+    public function down()
+    {
+        Schema::table('payments', function (Blueprint $table) {
+            $table->dropColumn('snap_token');
+        });
+    }
 };

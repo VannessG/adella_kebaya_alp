@@ -6,9 +6,10 @@
 <div class="container py-4">
     <form action="{{ route('rent.store') }}" method="POST" id="rentForm">
         @csrf
+        <input type="hidden" name="shipping_cost" id="shipping_cost_value" value="0">
+        
         <div class="row g-4">
             <div class="col-md-7">
-                {{-- Detail Sewa --}}
                 <div class="card p-4 rounded-4 shadow-sm border-0 mb-4">
                     <h5 class="fw-bold mb-3" style="font-family: 'Playfair Display';"><i class="bi bi-calendar-check me-2 text-primary"></i>Detail Sewa</h5>
                     
@@ -44,15 +45,14 @@
                     </div>
                 </div>
 
-                {{-- Pengiriman --}}
                 <div class="card p-4 rounded-4 shadow-sm border-0">
                     <h5 class="fw-bold mb-4"><i class="bi bi-truck me-2 text-primary"></i>Pengiriman</h5>
                     
                     <div class="btn-group w-100 mb-4" role="group">
-                        <input type="radio" class="btn-check" name="delivery_type" id="pickup" value="pickup" checked>
+                        <input type="radio" class="btn-check delivery-type" name="delivery_type" id="pickup" value="pickup" checked>
                         <label class="btn btn-outline-secondary py-3" for="pickup"><i class="bi bi-shop d-block fs-4 mb-1"></i> Ambil di Toko</label>
                     
-                        <input type="radio" class="btn-check" name="delivery_type" id="delivery" value="delivery">
+                        <input type="radio" class="btn-check delivery-type" name="delivery_type" id="delivery" value="delivery">
                         <label class="btn btn-outline-secondary py-3" for="delivery"><i class="bi bi-box-seam d-block fs-4 mb-1"></i> Ekspedisi</label>
                     </div>
 
@@ -69,7 +69,6 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Kota/Kabupaten</label>
-                                {{-- PERBAIKAN: Menambahkan name="city_id" agar masuk ke validasi Controller --}}
                                 <select id="city_id" name="city_id" class="form-select" disabled><option value="">-- Pilih Provinsi Dulu --</option></select>
                             </div>
                             <div class="col-12">
@@ -79,10 +78,10 @@
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Kurir</label>
                                 <select name="courier_code" id="courier_code" class="form-select">
+                                    <option value="lion">Lion Parcel</option>
                                     <option value="jne">JNE</option>
                                     <option value="pos">POS Indonesia</option>
                                     <option value="tiki">TIKI</option>
-                                    <option value="lion">Lion Parcel</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -98,20 +97,16 @@
                 </div>
             </div>
 
-            {{-- Ringkasan --}}
             <div class="col-md-5">
                 <div class="card p-4 rounded-4 shadow-sm border-0 sticky-top" style="top: 20px;">
                     <h5 class="fw-bold mb-4">Ringkasan Biaya</h5>
 
-                    {{-- Dropdown Diskon --}}
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Pilih Promo / Diskon</label>
                         <select name="discount_id" id="discount_id" class="form-select rounded-pill">
                             <option value="" data-amount="0">Tanpa Diskon</option>
                             @foreach($discounts as $d)
-                                <option value="{{ $d->id }}" 
-                                        data-type="{{ $d->type }}" 
-                                        data-amount="{{ $d->amount }}">
+                                <option value="{{ $d->id }}" data-type="{{ $d->type }}" data-amount="{{ $d->amount }}">
                                     {{ $d->name }} ({{ $d->type == 'percentage' ? $d->amount.'%' : 'Rp '.number_format($d->amount) }})
                                 </option>
                             @endforeach
@@ -148,7 +143,7 @@
                         @endforeach
                     </div>
 
-                    <button type="submit" class="btn btn-primary-custom w-100 rounded-pill py-3 fw-bold">Konfirmasi Sewa</button>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm">Konfirmasi Sewa</button>
                 </div>
             </div>
         </div>
@@ -186,21 +181,23 @@
 
         if (potong > 0) {
             $('#discount-row').attr('style', 'display: flex !important');
-            $('#discount-display').text('- Rp ' + potong.toLocaleString('id-ID'));
+            $('#discount-display').text('- Rp ' + Math.round(potong).toLocaleString('id-ID'));
         } else {
             $('#discount-row').attr('style', 'display: none !important');
         }
 
         const finalTotal = (rentTotal + currentShipping) - potong;
-        $('#total-payment').text('Rp ' + Math.max(0, finalTotal).toLocaleString('id-ID'));
+        $('#total-payment').text('Rp ' + Math.max(0, Math.round(finalTotal)).toLocaleString('id-ID'));
     }
 
-    $('input[name="delivery_type"]').change(function() {
+    $('.delivery-type').change(function() {
         if(this.value === 'delivery') {
             $('#delivery-section').slideDown();
+            calculateShipping();
         } else {
             $('#delivery-section').slideUp();
             currentShipping = 0;
+            $('#shipping_cost_value').val(0); // Reset input hidden
             $('#shipping-cost-display').text('Rp 0');
             calculateAll();
         }
@@ -209,6 +206,7 @@
     $('#province_id').change(function() {
         let id = $(this).val();
         $('#city_id').html('<option>Loading...</option>').prop('disabled', true);
+        $('#district_id').html('<option value="">-- Pilih Kota Dulu --</option>').prop('disabled', true);
         if(id) {
             $.get('/rajaongkir/cities/' + id, function(data) {
                 let opts = '<option value="">-- Pilih Kota --</option>';
@@ -231,28 +229,40 @@
                 });
                 $('#district_id').html(opts).prop('disabled', false);
             });
+            calculateShipping();
         }
     });
 
     function calculateShipping() {
         let distId = $('#district_id').val();
-        let cityId = $('#city_id').val(); // AMBIL CITY ID
+        let cityId = $('#city_id').val();
         let courier = $('#courier_code').val();
-        if(!distId) return;
+        
+        if(!distId || !cityId) return;
 
         $('#courier_service').html('<option>Loading...</option>');
         $.ajax({
             url: "{{ route('rajaongkir.shipping') }}",
-            // PERBAIKAN: Menambahkan city_id ke AJAX call
             data: { district_id: distId, city_id: cityId, courier: courier, weight: 1000 },
             success: function(response) {
-                let costs = response.costs || [];
-                $('#courier_service').empty().append('<option value="">Pilih Layanan...</option>');
-                if(costs.length > 0) {
-                    costs.forEach(c => {
-                        $('#courier_service').append(`<option value="${c.service}" data-cost="${c.cost}">${c.service} - Rp ${parseInt(c.cost).toLocaleString('id-ID')}</option>`);
+                let html = '<option value="">-- Pilih Layanan --</option>';
+                if(response.costs && response.costs.length > 0) {
+                    response.costs.forEach(function(c) {
+                        html += `<option value="${c.service}" data-cost="${c.cost}">${c.service} - Rp ${parseInt(c.cost).toLocaleString('id-ID')}</option>`;
                     });
-                    $('#courier_service option:eq(1)').prop('selected', true).trigger('change');
+                    $('#courier_service').html(html);
+                    
+                    let foundSameDay = false;
+                    $("#courier_service option").each(function() {
+                        if($(this).val() === "SAME DAY") {
+                            $(this).prop('selected', true);
+                            foundSameDay = true;
+                        }
+                    });
+                    if(!foundSameDay) $('#courier_service option:eq(1)').prop('selected', true);
+                    $('#courier_service').trigger('change');
+                } else {
+                    $('#courier_service').html('<option value="">Layanan tidak tersedia</option>');
                 }
             }
         });
@@ -262,6 +272,7 @@
 
     $('#courier_service').change(function() {
         currentShipping = parseInt($(this).find(':selected').data('cost')) || 0;
+        $('#shipping_cost_value').val(currentShipping);
         $('#shipping-cost-display').text('Rp ' + currentShipping.toLocaleString('id-ID'));
         calculateAll();
     });

@@ -8,32 +8,20 @@ use App\Models\Branch;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
-class ProductController extends Controller
-{
-    // ==========================================
-    // PUBLIC METHODS (Front End Katalog)
-    // ==========================================
-
-    public function index(Request $request, $categoryId = null)
-    {
-        // Ambil cabang dari session
+class ProductController extends Controller{
+    public function index(Request $request, $categoryId = null){
         $branch = session('selected_branch');
-        
-        // Proteksi jika session cabang hilang
+
         if (!$branch) {
             return redirect()->route('select.branch');
         }
 
-        // Query dasar: wajib sesuai branch_id dan is_available
-        $query = Product::where('branch_id', $branch->id)
-                        ->where('is_available', true);
+        $query = Product::where('branch_id', $branch->id)->where('is_available', true);
 
-        // Filter berdasarkan kategori jika ada ID kategori di URL
         if ($categoryId) {
             $query->where('category_id', $categoryId);
         }
 
-        // Filter pencarian
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -54,11 +42,8 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show($id)
-    {
+    public function show($id){
         $branch = session('selected_branch');
-        
-        // Pastikan produk milik cabang yang dipilih dan tersedia
         $product = Product::where('branch_id', $branch->id)
             ->where('is_available', true)
             ->findOrFail($id);
@@ -70,15 +55,8 @@ class ProductController extends Controller
         ]);
     }
 
-    // ==========================================
-    // ADMIN METHODS (Manajemen Produk)
-    // ==========================================
-
-    public function adminIndex()
-    {
+    public function adminIndex(){
         $branch = session('selected_branch');
-        
-        // Tampilkan produk sesuai cabang admin saat ini
         $products = Product::with(['category', 'branch'])
             ->when($branch, function($q) use ($branch) {
                 return $q->where('branch_id', $branch->id);
@@ -92,8 +70,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function create()
-    {
+    public function create(){
         return view('admin.products.create', [
             'title' => 'Tambah Produk',
             'categories' => Category::all(),
@@ -101,8 +78,7 @@ class ProductController extends Controller
         ]);
     }
     
-    public function store(Request $request)
-    {
+    public function store(Request $request){
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -118,17 +94,13 @@ class ProductController extends Controller
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
-        
         $validated['is_available'] = $request->has('is_available');
         $validated['is_available_for_rent'] = $request->has('is_available_for_rent');
-        
         Product::create($validated);
-        
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
     }
     
-    public function edit(Product $product)
-    {
+    public function edit(Product $product){
         return view('admin.products.edit', [
             'title' => 'Edit Produk',
             'product' => $product,
@@ -137,8 +109,7 @@ class ProductController extends Controller
         ]);
     }
     
-    public function update(Request $request, Product $product)
-    {
+    public function update(Request $request, Product $product){
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -157,23 +128,17 @@ class ProductController extends Controller
             }
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
-        
         $validated['is_available'] = $request->has('is_available');
         $validated['is_available_for_rent'] = $request->has('is_available_for_rent');
-        
         $product->update($validated);
-        
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui.');
     }
     
-    public function destroy(Product $product)
-    {
+    public function destroy(Product $product){
         if ($product->image) {
             Storage::disk('public')->delete($product->image);
         }
-        
         $product->delete();
-        
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus.');
     }
 }

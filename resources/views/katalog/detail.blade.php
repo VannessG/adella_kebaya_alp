@@ -3,13 +3,6 @@
 @section('title', $product->name)
 
 @section('content')
-<nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-decoration-none text-muted">Home</a></li>
-        <li class="breadcrumb-item"><a href="{{ url('/katalog') }}" class="text-decoration-none text-muted">Katalog</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ $product->name }}</li>
-    </ol>
-</nav>
 
 <div class="row g-5">
     {{-- Product Image --}}
@@ -23,7 +16,7 @@
     <div class="col-lg-6">
         <div class="h-100 d-flex flex-column">
             <div class="mb-1">
-                <span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2 rounded-pill">{{ $category->name }}</span>
+                <span class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2 rounded-pill">{{ $product->category->name }}</span>
             </div>
             <h1 class="fw-bold display-5 mb-2 mt-2">{{ $product->name }}</h1>
             
@@ -72,12 +65,11 @@
                 <ul class="list-unstyled text-muted small mt-2">
                     <li><i class="bi bi-check2-circle text-success me-2"></i>Stok Tersedia: <strong>{{ $product->stock }}</strong> pcs</li>
                     <li><i class="bi bi-check2-circle text-success me-2"></i>Berat: {{ $product->weight ?? 0 }} gram</li>
-                    <li><i class="bi bi-geo-alt me-2"></i>Lokasi: Cabang {{ $product->branch->city ?? '-' }}</li>
+                    <li><i class="bi bi-geo-alt me-2"></i>Lokasi: Cabang {{ $product->branch->name ?? '-' }}</li>
                 </ul>
             </div>
 
-                        {{-- Action Buttons --}}
-                        {{-- Cari bagian Action Buttons di file katalog/show --}}
+            {{-- Action Buttons --}}
             <div class="mt-auto d-grid gap-2 d-md-flex">
                 @auth
                     @if(auth()->user()->role === 'user')
@@ -86,14 +78,13 @@
                                 @csrf
                                 <input type="hidden" name="quantity" value="1">
                                 <button type="submit" class="btn btn-outline-custom w-100 py-3 rounded-pill fw-bold">
-                                    <i class="bi bi-cart-plus me-2"></i> Masukkan Keranjang
+                                    <i class="bi bi-cart-plus me-2"></i> Keranjang
                                 </button>
                             </form>
                             <a href="{{ route('checkout.form') }}?product={{ $product->id }}&quantity=1" class="btn btn-primary-custom flex-grow-1 py-3 rounded-pill fw-bold">
                                 Beli Sekarang
                             </a>
                             
-                            {{-- PERBAIKAN LINK SEWA: Ubah rent.create.product menjadi rent.create --}}
                             @if($product->is_available_for_rent)
                                 <a href="{{ route('rent.create', $product->id) }}" class="btn btn-success flex-grow-1 py-3 rounded-pill fw-bold text-white">
                                     Sewa Sekarang
@@ -106,15 +97,14 @@
                 @else
                     <a href="{{ route('login') }}" class="btn btn-outline-custom flex-grow-1 py-3 rounded-pill fw-bold">Masuk untuk Membeli</a>
                 @endauth
-            </div>
+            </div> 
         </div>
     </div>
 </div>
 
-{{-- Reviews Section --}}
 <div class="row mt-5 pt-5 border-top">
     <div class="col-12">
-        <h3 class="fw-bold mb-4" style="font-family: 'Playfair Display', serif;">Ulasan Pelanggan</h3>
+        <h3 class="fw-bold mb-4">Ulasan Pelanggan</h3>
         
         @php
             $approvedReviews = $product->reviews->where('is_approved', true);
@@ -124,14 +114,14 @@
             <div class="row g-4">
                 @foreach($approvedReviews as $review)
                     <div class="col-md-6">
-                        <div class="card h-100 border-0 shadow-sm rounded-4 p-4" style="background: #fff;">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3" 
                                      style="width: 45px; height: 45px; background-color: var(--primary-color); color: white;">
                                     {{ strtoupper(substr($review->user->name, 0, 1)) }}
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-0">{{ $review->masked_email }}</h6>
+                                    <h6 class="fw-bold mb-0">{{ $review->user->name }}</h6>
                                     <div class="text-warning small">
                                         @for($i=1; $i<=5; $i++)
                                             <i class="bi bi-star{{ $i <= $review->rating ? '-fill' : '' }}"></i>
@@ -169,3 +159,4 @@
         @endif
     </div>
 </div>
+@endsection

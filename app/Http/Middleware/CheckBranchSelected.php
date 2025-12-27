@@ -6,10 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckBranchSelected
-{
-    public function handle(Request $request, Closure $next): Response
-    {
+class CheckBranchSelected{
+    public function handle(Request $request, Closure $next): Response{
         // Route yang boleh diakses tanpa pilih cabang
         $excludedRoutes = [
             'select.branch', 
@@ -35,7 +33,6 @@ class CheckBranchSelected
         if (!session()->has('selected_branch')) {
             return redirect()->route('select.branch');
         }
-        
         return $next($request);
     }
 }

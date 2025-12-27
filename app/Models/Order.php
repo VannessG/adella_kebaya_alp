@@ -6,30 +6,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class Order extends Model
-{
+class Order extends Model{
     use HasFactory;
 
     protected $fillable = [
         'order_number', 
         'user_id', 
-        'discount_id',
+        'discount_id', 
         'branch_id',
         'customer_name', 
         'customer_phone', 
         'customer_address', 
         'status', 
         'order_date', 
-        'total_amount',
-        'shipping_cost',
+        'subtotal', 
+        'discount_amount',
+        'total_amount', 
+        'shipping_cost', 
         'delivery_type'
     ];
 
     protected $casts = [
         'order_date' => 'datetime',
+        'subtotal' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'shipping_cost' => 'decimal:2'
     ];
+
+    // Tambahkan relasi payment tunggal (MorphOne)
+    public function payment() {
+        return $this->morphOne(Payment::class, 'transaction');
+    }
     
     public function user(){
         return $this->belongsTo(User::class);
@@ -53,24 +61,18 @@ class Order extends Model
         return $this->morphMany(Payment::class, 'transaction');
     }
 
-    public function shipment(){
-        return $this->morphOne(Shipment::class, 'transaction');
-    }
-
     public function reviews(){
         return $this->hasMany(Review::class);
     }
 
     // Relasi untuk mengecek apakah user sudah me-review produk tertentu di order ini
-    public function userProductReview($productId)
-    {
-        // Cek apakah user sedang login untuk menghindari error pada tamu (guest)
+    public function userProductReview($productId){
         if (!Auth::check()) {
             return null;
         }
 
         return $this->reviews()
-            ->where('user_id', Auth::id()) // Lebih aman dan efisien
+            ->where('user_id', Auth::id())
             ->where('product_id', $productId)
             ->first();
     }

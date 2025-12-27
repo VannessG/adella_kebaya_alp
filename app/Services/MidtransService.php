@@ -4,20 +4,16 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 
-
-class MidtransService
-{
+class MidtransService{
     protected $serverKey;
     protected $clientKey;
     protected $isProduction;
 
-    public function __construct()
-    {
+    public function __construct(){
         $this->serverKey = config('services.midtrans.server_key');
         $this->clientKey = config('services.midtrans.client_key');
         $this->isProduction = config('services.midtrans.is_production');
         
-        // Set Midtrans configuration
         \Midtrans\Config::$serverKey = $this->serverKey;
         \Midtrans\Config::$clientKey = $this->clientKey;
         \Midtrans\Config::$isProduction = $this->isProduction;
@@ -26,32 +22,27 @@ class MidtransService
     }
 
     // Generate Snap Token
-    // Generate Snap Token
-    public function createTransaction($payment)
-    {
-        // Ambil transaksi asli (Order atau Rent)
-        $transaction = $payment->transaction; 
-        
+    public function createTransaction($payment){
+        $transaction = $payment->transaction;         
         $itemDetails = [];
 
-        // Ambil produk dari relasi transaction (Order/Rent -> products)
         foreach ($transaction->products as $product) {
-            $price = $payment->transaction_type == 'rent' 
-                ? $product->pivot->subtotal // Jika sewa, pakai subtotal per item
-                : $product->pivot->price;   // Jika beli, pakai harga beli
-
-            // Pastikan tidak ada desimal untuk Midtrans IDR
-            $price = (int) round($price);
+            if ($payment->transaction_type == 'rent' || $payment->transaction_type == 'App\Models\Rent') {
+                $price = $product->pivot->subtotal;
+                $qty = 1; 
+            } else {
+                $price = $product->pivot->price;
+                $qty = $product->pivot->quantity;
+            }
 
             $itemDetails[] = [
-                'id' => $product->id,
-                'price' => $price, // Harga satuan (atau total per item context sewa)
-                'quantity' => 1, // Kita set 1 karena logikanya harga diatas sudah dikali qty/hari (untuk simplifikasi midtrans)
-                'name' => substr($product->name, 0, 50), // Midtrans limit 50 chars
+                'id' => 'PROD-' . $product->id,
+                'price' => (int) round($price),
+                'quantity' => $qty,
+                'name' => substr($product->name, 0, 50),
             ];
         }
 
-        // Tambahkan Ongkir
         if ($transaction->shipping_cost > 0) {
             $itemDetails[] = [
                 'id' => 'SHIPPING',
@@ -61,33 +52,36 @@ class MidtransService
             ];
         }
 
-        // Tambahkan Diskon (Midtrans menerima nilai negatif untuk diskon)
-        // Hitung selisih total item + ongkir dengan total_amount yang harus dibayar
-        $calculatedTotal = array_sum(array_column($itemDetails, 'price'));
-        $realTotal = (int) round($payment->amount);
-        $discountDiff = $calculatedTotal - $realTotal;
+        $subtotalBeforeDiscount = 0;
+        foreach ($itemDetails as $item) {
+            $subtotalBeforeDiscount += $item['price'] * $item['quantity'];
+        }
 
-        if ($discountDiff > 0) {
+        $discountAmount = $subtotalBeforeDiscount - (int)$transaction->total_amount;
+        if ($discountAmount > 0) {
             $itemDetails[] = [
                 'id' => 'DISCOUNT',
-                'price' => -($discountDiff),
+                'price' => -(int) round($discountAmount),
                 'quantity' => 1,
                 'name' => 'Potongan Diskon',
             ];
         }
 
+        $finalGrossAmount = 0;
+        foreach ($itemDetails as $item) {
+            $finalGrossAmount += $item['price'] * $item['quantity'];
+        }
+
         $params = [
             'transaction_details' => [
-                'order_id' => $payment->payment_number, // Pakai No Pembayaran, bukan No Order
-                'gross_amount' => $realTotal,
+                'order_id' => $payment->payment_number,
+                'gross_amount' => (int) $finalGrossAmount, 
             ],
             'customer_details' => [
                 'first_name' => $payment->payer_name,
                 'phone' => $payment->payer_phone,
             ],
             'item_details' => $itemDetails,
-            // Paksa tampilkan QRIS jika metode pembayaran QRIS
-            // 'enabled_payments' => ['gopay', 'shopeepay', 'qris'], // Opsional: batasi metode
         ];
 
         try {
@@ -99,9 +93,7 @@ class MidtransService
         }
     }
 
-    // Get transaction status from Midtrans
-    public function getTransactionStatus($orderId)
-    {
+    public function getTransactionStatus($orderId){
         try {
             $status = \Midtrans\Transaction::status($orderId);
             return $status;
@@ -111,12 +103,9 @@ class MidtransService
         }
     }
 
-    // Handle Notification dari Midtrans
-    public function handleNotification()
-    {
+    public function handleNotification(){
         try {
             $notification = new \Midtrans\Notification();
-            
             return [
                 'order_id' => $notification->order_id,
                 'transaction_status' => $notification->transaction_status,
@@ -130,8 +119,7 @@ class MidtransService
         }
     }
 
-    public function getClientKey()
-    {
+    public function getClientKey(){
         return $this->clientKey;
     }
 }

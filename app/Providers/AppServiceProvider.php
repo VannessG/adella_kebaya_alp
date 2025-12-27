@@ -22,9 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
-
-        // --- SOLUSI FIX NOT SECURE DI NGROK ---
-        // Memaksa semua link generate Laravel menjadi HTTPS
+        
         if ($this->app->environment('local')) {
             URL::forceScheme('https');
         }

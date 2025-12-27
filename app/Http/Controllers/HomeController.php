@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Discount;
 
-class HomeController extends Controller
-{
-    public function index()
-    {
-        // Middleware sudah handle cek cabang
-        
+class HomeController extends Controller{
+    public function index(){
         $branch = session('selected_branch');
         
         $featuredProducts = Product::where('is_available', true)
@@ -20,16 +17,20 @@ class HomeController extends Controller
             ->take(8)
             ->get();
             
+        $activeDiscount = Discount::where('is_active', true)
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
+            ->first();
+
         return view('welcome', [
             'title' => 'Beranda',
-            'featuredProducts' => $featuredProducts
+            'featuredProducts' => $featuredProducts,
+            'activeDiscount' => $activeDiscount
         ]);
     }
 
-    public function about()
-    {
+    public function about(){
         // Middleware sudah handle cek cabang
-        
         return view('about', [
             'title' => 'Tentang Kami'
         ]);

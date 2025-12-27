@@ -6,10 +6,8 @@ use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ReviewController extends Controller
-{
-    public function store(Request $request)
-    {
+class ReviewController extends Controller{
+    public function store(Request $request){
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'rating' => 'required|integer|min:1|max:5',
@@ -32,9 +30,8 @@ class ReviewController extends Controller
             'rating' => $request->rating,
             'comment' => $request->comment,
             'image' => $imagePath,
-            'is_approved' => true, // Otomatis aktif
+            'is_approved' => true,
         ]);
-
         return back()->with('success', 'Terima kasih atas ulasan Anda!');
     }
 }

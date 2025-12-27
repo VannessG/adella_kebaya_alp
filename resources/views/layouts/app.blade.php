@@ -5,141 +5,168 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adella Kebaya - @yield('title')</title>
     
+    {{-- Fonts: Marcellus (Klasik/Tegas) & Jost (Modern/Bersih) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     
+    {{-- Framework CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {{-- Bootstrap Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <style>
         :root {
-            --primary-color: #8B5E3C;
-            --primary-hover: #6F4B30;
-            --accent-color: #D4AF37;
-            --bg-light: #F9F7F2;
-            --text-dark: #2C2C2C;
+            /* --- PALET WARNA MONOKROM SEJATI --- */
+            
+            /* Solid Colors */
+            --color-black: #000000;
+            --color-dark-gray: #333333;   /* Untuk teks utama */
+            --color-medium-gray: #777777; /* Untuk teks sekunder */
+            --color-light-gray: #E5E5E5;  /* Untuk border halus */
+            --color-lighter-gray: #F8F8F8;/* Untuk background subtle */
+            --color-white: #FFFFFF;
+
+            /* Semantic Mappings */
+            --primary-color: var(--color-black);
+            --bg-body: var(--color-white);
+            --bg-surface: var(--color-white);
+            --text-main: var(--color-dark-gray);
+            --text-muted: var(--color-medium-gray);
+            --border-subtle: var(--color-light-gray);
+            
+            /* Shadows (Grayscale) */
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 30px rgba(0,0,0,0.08);
+            
+            --radius-sm: 4px;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
+            font-family: 'Jost', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            line-height: 1.7;
         }
 
-        h1, h2, h3, h4, h5, h6, .navbar-brand {
-            font-family: 'Playfair Display', serif;
+        /* TYPOGRAPHY */
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .font-serif {
+            font-family: 'Marcellus', serif;
+            color: var(--color-black);
+            letter-spacing: 0.05em;
         }
 
-        /* Buttons */
-        .btn-primary-custom {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 50px;
-            transition: all 0.3s ease;
+        /* NAVBAR (Solid White & Black Border) */
+        .navbar {
+            background-color: var(--color-white) !important;
+            border-bottom: 1px solid var(--color-black);
+            padding: 1rem 0;
         }
 
-        .btn-primary-custom:hover {
-            background-color: var(--primary-hover);
-            border-color: var(--primary-hover);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(139, 94, 60, 0.3);
-        }
-
-        .btn-outline-custom {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-            border-radius: 50px;
-        }
-
-        .btn-outline-custom:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* Cards - PERBAIKAN FLICKERING DI SINI */
+        /* CARDS (Clean Grayscale) */
         .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
-            background: #fff;
-            overflow: hidden;
-            /* Tambahan untuk stabilitas */
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            will-change: transform;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.4s ease;
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-black); /* Border jadi hitam saat hover */
         }
 
-        .badge {
-            font-weight: 500;
-            padding: 0.5em 1em;
-            border-radius: 30px;
+        .product-card:hover img {
+            transform: scale(1.05);
         }
 
-        .form-control, .form-select {
-            border-radius: 10px;
-            padding: 0.7rem 1rem;
-            border: 1px solid #e0e0e0;
+        /* BUTTONS (Strictly Black & White) */
+        .btn {
+            border-radius: 0; /* Sharp/Kotak */
+            padding: 0.7rem 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            transition: all 0.3s ease;
         }
-        
+
+        .btn-primary-custom, .btn-primary {
+            background-color: var(--color-black);
+            border: 1px solid var(--color-black);
+            color: var(--color-white);
+        }
+
+        .btn-primary-custom:hover, .btn-primary:hover {
+            background-color: var(--color-white);
+            color: var(--color-black); /* Invert jadi putih dengan teks hitam */
+        }
+
+        .btn-outline-custom {
+            color: var(--color-black);
+            border: 1px solid var(--color-black);
+            background: transparent;
+        }
+
+        .btn-outline-custom:hover {
+            background-color: var(--color-black);
+            color: var(--color-white);
+        }
+
+        /* FORMS (Grayscale Focus) */
         .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(139, 94, 60, 0.15);
+            border-color: var(--color-black);
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
         }
 
-        .pagination .page-link {
-            color: var(--primary-color);
-            border: none;
-            margin: 0 2px;
-            border-radius: 8px;
+        /* ALERTS (Override warna-warni Bootstrap jadi Monokrom) */
+        .alert {
+            border-radius: 0;
+            border: 1px solid var(--color-black);
+            background-color: var(--color-white);
+            color: var(--color-black);
         }
+        .alert-success .bi { color: var(--color-black); }
+        .alert-danger .bi { color: var(--color-black); }
+
+        /* UTILITIES */
+        .text-black { color: var(--color-black) !important; }
+        .bg-gray-light { background-color: var(--color-lighter-gray) !important; }
         
-        .pagination .page-item.active .page-link {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+        /* SCROLLBAR (Grayscale) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #FFF; }
+        ::-webkit-scrollbar-thumb { background: #555; }
     </style>
 </head>
 <body>
 
-    @include('partials.navbar')
+    {{-- Navbar logic --}}
+    @unless(request()->routeIs('select.branch') || request()->routeIs('branch.*'))
+        @include('partials.navbar')
+    @endunless
 
-    <main class="flex-grow-1 py-4">
-        <div class="container">
+    <main class="flex-grow-1">
+        <div class="container py-5">
+            {{-- Alert System (Monochrome) --}}
             @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-check-circle-fill fs-4 me-2"></i>
-                        <div>{{ session('success') }}</div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert d-flex align-items-center p-3 shadow-sm mb-4" role="alert">
+                    <i class="bi bi-check-circle-fill fs-5 me-3"></i>
+                    <div class="fw-medium">{{ session('success') }}</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-4 mb-4" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-exclamation-circle-fill fs-4 me-2"></i>
-                        <div>{{ session('error') }}</div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert d-flex align-items-center p-3 shadow-sm mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-5 me-3"></i>
+                    <div class="fw-medium">{{ session('error') }}</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                 </div>
             @endif
 
@@ -147,7 +174,9 @@
         </div>
     </main>
 
-    @include('partials.footer')
+    @unless(request()->routeIs('select.branch') || request()->routeIs('branch.*'))
+        @include('partials.footer')
+    @endunless
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

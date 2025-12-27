@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Payment extends Model
-{
+class Payment extends Model{
     use HasFactory;
 
     protected $fillable = [
@@ -24,8 +23,11 @@ class Payment extends Model
         'snap_token',
     ];
 
-    public static function getStatusOptions()
-    {
+    protected $casts = [
+        'amount' => 'decimal:2'
+    ];
+
+    public static function getStatusOptions(){
         return [
             'pending' => 'Menunggu Pembayaran',
             'processing' => 'Menunggu Verifikasi Admin',
@@ -36,22 +38,15 @@ class Payment extends Model
         ];
     }
 
-    protected $casts = [
-        'amount' => 'decimal:2'
-    ];
-
-    public function paymentMethod()
-    {
+    public function paymentMethod(){
         return $this->belongsTo(PaymentMethod::class);
     }
 
-    public function transaction()
-    {
+    public function transaction(){
         return $this->morphTo();
     }
 
-    public function logs()
-    {
+    public function logs(){
         return $this->hasMany(PaymentLog::class, 'transaction_id', 'payment_number');
     }
 }

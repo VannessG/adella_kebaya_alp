@@ -15,22 +15,18 @@ use App\Services\RajaOngkirService;
 use App\Services\MidtransService;
 use Carbon\Carbon;
 
-class RentController extends Controller
-{
+class RentController extends Controller{
     protected $rajaOngkirService;
 
     const ORIGIN_WARU = 6626;       
     const ORIGIN_BOJONEGORO = 953;  
 
-    public function __construct(RajaOngkirService $rajaOngkirService)
-    {
+    public function __construct(RajaOngkirService $rajaOngkirService){
         $this->rajaOngkirService = $rajaOngkirService;
     }
 
-    public function cancel(Rent $rent)
-    {
+    public function cancel(Rent $rent){
         if ($rent->user_id !== Auth::id()) return back()->with('error', 'Akses ditolak.');
-        // Menggunakan method canBeCancelled dari model Rent.php
         if (!$rent->canBeCancelled()) return back()->with('error', 'Sewa tidak bisa dibatalkan.');
 
         DB::transaction(function () use ($rent) {
@@ -41,24 +37,25 @@ class RentController extends Controller
         return back()->with('success', 'Penyewaan dibatalkan.');
     }
 
-    // --- AJAX HELPER RAJAONGKIR ---
     public function getProvinces() {
         return response()->json($this->rajaOngkirService->getProvinces());
     }
+
     public function getCities($provinceId) {
         return response()->json($this->rajaOngkirService->getCities($provinceId));
     }
+
     public function getDistricts($cityId) {
         return response()->json($this->rajaOngkirService->getDistricts($cityId));
     }
+
     public function getShippingCost(Request $request) {
         $branch = session('selected_branch');
         $originId = str_contains(strtolower($branch->name), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
-        $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, $request->weight ?? 1000, $request->courier);
+        $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, $request->weight ?? 1000, $request->courier, $request->city_id);
         return response()->json(['costs' => $costs]);
     }
 
-    // --- USER METHODS ---
     public function index() {
         $rents = Rent::with(['products', 'reviews'])->where('user_id', Auth::id())->latest()->get();
         return view('rent.index', ['rents' => $rents, 'statusOptions' => Rent::getStatusOptions()]);
@@ -78,92 +75,116 @@ class RentController extends Controller
     }
 
     public function store(Request $request) {
-    $request->validate([
-        'products' => 'required|array',
-        'start_date' => 'required|date|after_or_equal:today',
-        'end_date' => 'required|date|after:start_date',
-        'customer_name' => 'required|string',
-        'customer_phone' => 'required|string',
-        'delivery_type' => 'required|in:pickup,delivery',
-        'payment_method_id' => 'required|exists:payment_methods,id',
-        'discount_id' => 'nullable|exists:discounts,id', // TAMBAHKAN INI
-        'district_id' => 'required_if:delivery_type,delivery', // PERBAIKI INI
-    ]);
+        $request->validate([
+            'products' => 'required|array',
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after:start_date',
+            'customer_name' => 'required|string',
+            'customer_phone' => 'required|string',
+            'delivery_type' => 'required|in:pickup,delivery',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'discount_id' => 'nullable|exists:discounts,id',
+            'district_id' => 'required_if:delivery_type,delivery',
+            'shipping_cost' => 'nullable|numeric',
+        ]);
 
-    return DB::transaction(function () use ($request) {
-        $branch = session('selected_branch');
-        $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
-        $totalDays = max(1, $startDate->diffInDays($endDate));
+        return DB::transaction(function () use ($request) {
+            $branch = session('selected_branch');
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date);
+            $totalDays = max(1, $startDate->diffInDays($endDate));
 
-        $totalAmount = 0; $totalWeight = 0; $rentProducts = [];
-        foreach ($request->products as $item) {
-            $product = Product::findOrFail($item['id']);
-            $subtotal = ($product->rent_price_per_day * $totalDays) * $item['quantity'];
-            $totalAmount += $subtotal; 
-            $totalWeight += ($product->weight ?? 1000) * $item['quantity'];
-            $rentProducts[$product->id] = ['quantity' => $item['quantity'], 'price_per_day' => $product->rent_price_per_day, 'subtotal' => $subtotal];
-            $product->decrement('stock', $item['quantity']);
-        }
-
-        // Hitung Diskon Berdasarkan Pilihan User
-        $discountAmount = 0;
-        $appliedDiscount = null;
-        if ($request->filled('discount_id')) {
-            $appliedDiscount = Discount::find($request->discount_id);
-            if ($appliedDiscount && $appliedDiscount->isActive()) {
-                $discountAmount = $appliedDiscount->applyTo($totalAmount);
+            $totalProdukHari = 0; 
+            $rentProducts = [];
+        
+            foreach ($request->products as $item) {
+                $product = Product::findOrFail($item['id']);
+                $subtotalItem = ($product->rent_price_per_day * $totalDays) * $item['quantity'];
+                $totalProdukHari += $subtotalItem; 
+                
+                $rentProducts[$product->id] = [
+                    'quantity' => $item['quantity'], 
+                    'price_per_day' => $product->rent_price_per_day, 
+                    'subtotal' => $subtotalItem
+                ];
+                $product->decrement('stock', $item['quantity']);
             }
-        }
 
-        $shippingCost = 0;
-        if ($request->delivery_type === 'delivery') {
-            $originId = str_contains(strtolower($branch->name), 'bojonegoro') ? self::ORIGIN_BOJONEGORO : self::ORIGIN_WARU;
-            $costs = $this->rajaOngkirService->calculateShippingCost($originId, $request->district_id, $totalWeight, $request->courier_code);
-            foreach($costs as $c) { if($c['service'] == $request->courier_service) { $shippingCost = $c['cost']; break; } }
-        }
+            $discountAmount = 0;
+            if ($request->filled('discount_id')) {
+                $appliedDiscount = Discount::find($request->discount_id);
+                if ($appliedDiscount && $appliedDiscount->isActive()) {
+                    $discountAmount = $appliedDiscount->applyTo($totalProdukHari);
+                    $appliedDiscount->increment('used_count');
+                }
+            }
 
-        // Total Akhir setelah Diskon
-        $finalTotal = ($totalAmount + $shippingCost) - $discountAmount;
+            $shippingCost = ($request->delivery_type === 'delivery') ? (int)$request->shipping_cost : 0;
+            $finalTotal = ($totalProdukHari - $discountAmount) + $shippingCost;
 
-        $rent = Rent::create([
-            'rent_number' => 'RENT-' . strtoupper(Str::random(5)) . '-' . time(),
-            'user_id' => Auth::id(), 'branch_id' => $branch->id,
-            'start_date' => $startDate, 'end_date' => $endDate, 'total_days' => $totalDays,
-            'status' => 'pending', 'total_amount' => $finalTotal,
-            'delivery_type' => $request->delivery_type, 'shipping_cost' => $shippingCost,
-            'customer_address' => $request->customer_address, 'customer_name' => $request->customer_name, 'customer_phone' => $request->customer_phone,
-            'discount_id' => $appliedDiscount ? $appliedDiscount->id : null, // Simpan ID Diskon
-        ]);
-        $rent->products()->sync($rentProducts);
+            $rent = Rent::create([
+                'rent_number' => 'RENT-' . strtoupper(Str::random(5)) . '-' . time(),
+                'user_id' => Auth::id(), 
+                'branch_id' => $branch->id,
+                'start_date' => $startDate, 
+                'end_date' => $endDate, 
+                'total_days' => $totalDays,
+                'status' => 'pending', 
+                'subtotal' => $totalProdukHari, // HARUS DIISI
+                'discount_amount' => $discountAmount, // HARUS DIISI
+                'total_amount' => $finalTotal,
+                'delivery_type' => $request->delivery_type, 
+                'shipping_cost' => $shippingCost,
+                'customer_address' => $request->customer_address, 
+                'customer_name' => $request->customer_name, 
+                'customer_phone' => $request->customer_phone,
+            ]);
+            $rent->products()->sync($rentProducts);
 
-        if ($appliedDiscount) { $appliedDiscount->increment('used_count'); }
+            if ($appliedDiscount) { 
+                $appliedDiscount->increment('used_count'); 
+            }
 
-        $paymentMethod = PaymentMethod::find($request->payment_method_id);
-        $payment = $rent->payments()->create([
-            'payment_number' => 'PAY-RENT-' . strtoupper(Str::random(5)),
-            'payment_method_id' => $paymentMethod->id, 'amount' => $finalTotal,
-            'payer_name' => $request->customer_name, 'payer_phone' => $request->customer_phone, 'status' => 'pending'
-        ]);
+            $paymentMethod = PaymentMethod::find($request->payment_method_id);
+            $payment = $rent->payments()->create([
+                'payment_number' => 'PAY-RENT-' . strtoupper(Str::random(5)),
+                'payment_method_id' => $paymentMethod->id, 
+                'amount' => $finalTotal, 
+                'payer_name' => $request->customer_name, 
+                'payer_phone' => $request->customer_phone, 
+                'status' => 'pending'
+            ]);
 
-        if (in_array($paymentMethod->type, ['qris', 'va'])) {
-            try {
-                $midtrans = new MidtransService();
-                $snapToken = $midtrans->createTransaction($payment);
-                $payment->update(['snap_token' => $snapToken]);
-                return redirect()->route('payment.pay', $payment->payment_number);
-            } catch (\Exception $e) { Log::error("Midtrans Rent Error: " . $e->getMessage()); }
-        }
-        return redirect()->route('rent.show', $rent->rent_number)->with('success', 'Penyewaan berhasil dibuat!');
-    });
-}
-
-    public function show($rentNumber) {
-        $rent = Rent::where('rent_number', $rentNumber)->where('user_id', Auth::id())->firstOrFail();
-        return view('rent.show', ['rent' => $rent, 'statusOptions' => Rent::getStatusOptions()]);
+            if (in_array($paymentMethod->type, ['qris', 'va', 'transfer'])) {
+                try {
+                    $midtrans = new MidtransService();
+                    $snapToken = $midtrans->createTransaction($payment);
+                    $payment->update(['snap_token' => $snapToken]);
+                    
+                    if ($paymentMethod->type === 'qris') {
+                        return redirect()->route('payment.pay', $payment->payment_number);
+                    }
+                } catch (\Exception $e) { 
+                    Log::error("Midtrans Rent Error: " . $e->getMessage()); 
+                }
+            }
+            return redirect()->route('rent.show', $rent->rent_number)->with('success', 'Penyewaan berhasil dibuat!');
+        });
     }
 
-    // --- ADMIN METHODS (PERBAIKAN ERROR 405/UNDEFINED) ---
+    public function show($rentNumber) {
+        $rent = Rent::with(['products', 'payment.paymentMethod', 'branch'])
+            ->where('rent_number', $rentNumber)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+        $paymentMethods = PaymentMethod::where('is_active', true)->get();
+        return view('rent.show', [
+            'rent' => $rent, 
+            'statusOptions' => Rent::getStatusOptions(),
+            'paymentMethods' => $paymentMethods
+        ]);
+    }
+
     public function adminIndex() {
         $rents = Rent::with(['user', 'branch'])->latest()->paginate(10);
         return view('admin.rents.index', ['rents' => $rents, 'statusOptions' => Rent::getStatusOptions()]);

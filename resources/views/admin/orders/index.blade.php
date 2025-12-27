@@ -5,9 +5,6 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold" style="font-family: 'Playfair Display', serif;">Daftar Pesanan</h3>
-    <a href="{{ route('admin.orders.create') }}" class="btn btn-primary-custom btn-sm rounded-pill px-4">
-        <i class="bi bi-plus-lg me-1"></i> Pesanan Baru
-    </a>
 </div>
 
 <div class="card border-0 shadow-sm rounded-4">

@@ -5,8 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Branch extends Model
-{
+class Branch extends Model{
     use HasFactory;
 
     protected $fillable = [
@@ -17,23 +16,15 @@ class Branch extends Model
         'is_active'
     ];
 
-    public function products()
-    {
+    public function products(){
         return $this->hasMany(Product::class);
     }
 
-    public function orders()
-    {
+    public function orders(){
         return $this->hasMany(Order::class);
     }
 
-    public function rents()
-    {
+    public function rents(){
         return $this->hasMany(Rent::class);
-    }
-
-    public function shipments()
-    {
-        return $this->hasMany(Shipment::class);
     }
 }

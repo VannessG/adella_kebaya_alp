@@ -19,8 +19,10 @@ return new class extends Migration
             $table->text('customer_address');
             $table->enum('status', ['pending', 'payment_check', 'processing', 'shipping', 'completed', 'cancelled'])->default('pending');
             $table->date('order_date');
-            $table->decimal('total_amount', 12, 2);
-            $table->decimal('shipping_cost', 10, 2)->default(0);
+            $table->decimal('subtotal', 15, 2)->default(0); 
+            $table->decimal('discount_amount', 15, 2)->default(0);
+            $table->decimal('shipping_cost', 15, 2)->default(0);
+            $table->decimal('total_amount', 15, 2);
             $table->enum('delivery_type', ['pickup', 'delivery'])->default('pickup');
             $table->timestamps();
         });

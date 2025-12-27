@@ -16,10 +16,12 @@ return new class extends Migration
             $table->dateTime('end_date');
             $table->integer('total_days');
             $table->enum('status', ['pending', 'payment_check', 'confirmed', 'active', 'returned', 'completed', 'cancelled', 'overdue'])->default('pending');
-            $table->decimal('total_amount', 12, 2);
+            $table->decimal('subtotal', 15, 2)->default(0); // Harga asli produk x hari
+            $table->decimal('discount_amount', 15, 2)->default(0); // Nominal potongan
+            $table->decimal('shipping_cost', 15, 2)->default(0); // Ongkir
+            $table->decimal('total_amount', 15, 2); // Hasil akhir (Subtotal - Diskon + Ongkir)
             $table->foreignId('branch_id')->nullable()->constrained()->onDelete('set null');
             $table->enum('delivery_type', ['pickup', 'delivery'])->default('pickup');
-            $table->decimal('shipping_cost', 10, 2)->default(0);
             $table->text('customer_address')->nullable();
             $table->string('customer_name');
             $table->string('customer_phone');
