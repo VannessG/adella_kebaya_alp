@@ -229,8 +229,8 @@
                 <div class="col-6">
                     <a href="{{ route('admin.shifts.index') }}" class="card bg-subtle border-0 rounded-0 h-100 text-decoration-none hover-invert transition-all p-4 text-center">
                         <i class="bi bi-clock fs-3 mb-3 d-block text-black icon-transition"></i>
-                        <h6 class="fw-bold text-black text-uppercase mb-1 small text-transition" style="letter-spacing: 0.05em;">Kehadiran</h6>
-                        <small class="text-muted small text-transition" style="font-size: 0.65rem;">Daftar Kehadiran Pegawai</small>
+                        <h6 class="fw-bold text-black text-uppercase mb-1 small text-transition" style="letter-spacing: 0.05em;">Absensi</h6>
+                        <small class="text-muted small text-transition" style="font-size: 0.65rem;">Daftar Absensi Pegawai</small>
                     </a>
                 </div>
 

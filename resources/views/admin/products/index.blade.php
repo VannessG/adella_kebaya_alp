@@ -6,14 +6,32 @@
 
 <div class="container pb-4">
     <div class="row align-items-end">
-        <div class="col-md-8 text-center text-md-start">
+        {{-- KOLOM JUDUL --}}
+        <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
             <h1 class="display-5 fw-normal text-uppercase text-black mb-2" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Daftar Produk</h1>
             <p class="text-muted small text-uppercase mb-0" style="letter-spacing: 0.1em;">Kelola inventaris dan katalog produk</p>
         </div>
-        <div class="col-md-4 text-center text-md-end mt-4 mt-md-0">
-            <a href="{{ route('admin.products.create') }}" class="btn btn-primary-custom rounded-0 py-3 px-4 text-uppercase fw-bold small" style="letter-spacing: 0.1em;">
-                <i class="bi bi-plus-lg me-2"></i> Tambah Produk
-            </a>
+
+        {{-- KOLOM AKSI (SEARCH + TOMBOL TAMBAH) --}}
+        <div class="col-md-6">
+            <div class="d-flex flex-column flex-md-row justify-content-md-end align-items-center gap-3">
+                
+                {{-- SEARCH FORM --}}
+                <form action="{{ route('admin.products.index') }}" method="GET" class="w-100 w-md-auto position-relative" style="min-width: 250px;">
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           class="form-control rounded-0 border-0 border-bottom border-secondary bg-transparent ps-0 pe-5" 
+                           placeholder="Cari produk..." 
+                           style="font-size: 0.85rem;">
+                    <button type="submit" class="btn position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent p-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+
+                {{-- TOMBOL TAMBAH --}}
+                <a href="{{ route('admin.products.create') }}" class="btn btn-primary-custom rounded-0 py-2 px-4 text-uppercase fw-bold small text-nowrap" style="letter-spacing: 0.1em; font-size: 0.7rem;">
+                    <i class="bi bi-plus-lg me-2"></i> Tambah Produk
+                </a>
+            </div>
         </div>
     </div>
     <div class="d-none d-md-block" style="width: 60px; height: 1px; background-color: #000; margin-top: 15px;"></div>
@@ -36,7 +54,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($products as $product)
+                        @forelse($products as $product)
                             <tr style="border-bottom: 1px solid #f0f0f0;">
                                 <td class="ps-4 py-3">
                                     <div class="border p-1 bg-white" style="width: 60px; height: 60px; border-color: #eee !important;">
@@ -94,14 +112,20 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted small text-uppercase" style="letter-spacing: 0.1em;">
+                                    Tidak ada produk ditemukan.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
     <div class="d-flex justify-content-center mt-5">
-        {{ $products->links() }}
+        {{ $products->appends(request()->query())->links() }}
     </div>
 </div>
 @endsection

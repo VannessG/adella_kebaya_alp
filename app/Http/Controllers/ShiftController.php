@@ -106,4 +106,40 @@ class ShiftController extends Controller{
         Shift::create($request->all());
         return redirect()->route('admin.shifts.index')->with('success', 'Rekapan shift berhasil disimpan.');
     }
+
+    public function edit($id){
+        $shift = Shift::with('branch')->findOrFail($id);
+        $employees = \App\Models\Employee::where('branch_id', $shift->branch_id)->get();
+
+        $employees->transform(function ($employee) use ($shift) {
+            $currentStatus = $shift->attendance_data[$employee->id] ?? 'tidak_hadir';
+            $employee->edit_status_value = $currentStatus;
+            $employee->edit_is_present = ($currentStatus === 'hadir');
+            return $employee;
+        });
+
+        return view('admin.shifts.edit', [
+            'title' => 'Edit Absensi',
+            'shift' => $shift,
+            'employees' => $employees
+        ]);
+    }
+
+    public function update(Request $request, $id){
+        $shift = Shift::findOrFail($id);
+        $request->validate([
+            'attendance_data' => 'required|array',
+            'start_time' => 'required',
+            'end_time' => 'required',
+        ]);
+
+        $shift->update([
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'attendance_data' => $request->attendance_data, // Simpan array langsung (casting JSON di model)
+        ]);
+
+        return redirect()->route('admin.shifts.show', $shift->id)
+            ->with('success', 'Data absensi berhasil diperbarui.');
+    }
 }

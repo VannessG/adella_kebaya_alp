@@ -9,7 +9,6 @@
             <p class="text-muted small text-uppercase mb-0" style="letter-spacing: 0.1em;">Kelola data karyawan dan staf</p>
         </div>
         <div class="col-md-4 text-center text-md-end mt-4 mt-md-0">
-            {{-- TOMBOL CREATE --}}
             <a href="{{ route('admin.employees.create') }}" class="btn btn-primary-custom rounded-0 py-3 px-4 text-uppercase fw-bold small" style="letter-spacing: 0.1em;">
                 <i class="bi bi-plus-lg me-2"></i> Tambah Pegawai
             </a>
@@ -20,7 +19,6 @@
 
 <div class="container pb-5">
 
-    {{-- ALERT SUCCESS --}}
     @if(session('success'))
         <div class="alert rounded-0 border-black bg-white text-black d-flex align-items-center mb-4 p-3" role="alert">
             <i class="bi bi-check-circle me-3 fs-5"></i>
@@ -29,7 +27,6 @@
         </div>
     @endif
 
-    {{-- TABEL DATA --}}
     <div class="card border rounded-0 shadow-none bg-white" style="border-color: #E0E0E0;">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -56,15 +53,13 @@
                                 <span class="text-black fw-bold text-uppercase small" style="letter-spacing: 0.05em;">{{ $employee->name }}</span>
                             </td>
                             <td class="py-3">
-                                <span class="badge rounded-0 border text-black bg-white px-2 py-1 text-uppercase" 
-                                      style="font-size: 0.8rem; letter-spacing: 0.05em; border-color: #ddd;">
+                                <span class="badge rounded-0 border text-black bg-white px-2 py-1 text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.05em; border-color: #ddd;">
                                     {{ $employee->branch->name ?? '-' }}
                                 </span>
                             </td>
                             <td class="py-3 text-start">{{ $employee->phone }}</td>
                             <td class="py-3 text-center">
-                                <span class="badge rounded-0 px-2 py-1 text-uppercase fw-normal border" 
-                                      style="font-size: 0.8rem; letter-spacing: 0.05em;
+                                <span class="badge rounded-0 px-2 py-1 text-uppercase fw-normal border" style="font-size: 0.8rem; letter-spacing: 0.05em;
                                       @if($employee->is_active) background-color: #000; color: #fff; border-color: #000;
                                       @else background-color: #fff; color: #dc3545; border-color: #dc3545; @endif">
                                     {{ $employee->is_active ? 'Aktif' : 'Non-Aktif' }}
@@ -72,14 +67,10 @@
                             </td>
                             <td class="pe-4 py-3 text-end">
                                 <div class="d-flex justify-content-end gap-2">
-                                    {{-- EDIT --}}
-                                    <a href="{{ route('admin.employees.edit', $employee->id) }}" 
-                                       class="btn btn-outline-dark rounded-0 px-3 py-1 text-uppercase fw-bold" 
-                                       style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                                    <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-outline-dark rounded-0 px-3 py-1 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.05em;">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     
-                                    {{-- DELETE --}}
                                     <form action="{{ route('admin.employees.destroy', $employee->id) }}" method="POST" onsubmit="return confirm('Hapus pegawai ini?')">
                                         @csrf 
                                         @method('DELETE')

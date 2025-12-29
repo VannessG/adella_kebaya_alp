@@ -67,11 +67,20 @@ class ProductController extends Controller{
         ]);
     }
 
-    public function adminIndex(){
+    public function adminIndex(Request $request){
         $branch = session('selected_branch');
+        
         $products = Product::with(['category', 'branch'])
             ->when($branch, function($q) use ($branch) {
                 return $q->where('branch_id', $branch->id);
+            })
+            ->when($request->search, function($q) use ($request) {
+                $search = $request->search;
+                return $q->where(function($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")->orWhereHas('category', function($catQuery) use ($search) {
+                        $catQuery->where('name', 'like', "%{$search}%");
+                    });
+                });
             })
             ->latest()
             ->paginate(10);
