@@ -3,118 +3,127 @@
 @section('title', 'Edit Diskon')
 
 @section('content')
-<div class="container">
+
+<div class="container pb-4">
+    <div class="row align-items-end">
+        <div class="col-md-8 text-center text-md-start">
+            <h1 class="display-5 fw-normal text-uppercase text-black mb-2" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Edit Diskon</h1>
+            <p class="text-muted small text-uppercase mb-0" style="letter-spacing: 0.1em;">Perbarui informasi kode promo</p>
+        </div>
+    </div>
+    <div class="d-md-none" style="width: 60px; height: 1px; background-color: #000; margin: 15px auto;"></div>
+</div>
+
+<div class="container pb-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <h1 class="fw-bold text mb-4">Edit Diskon</h1>
+            <div class="card border rounded-0 bg-white p-4 p-md-5" style="border-color: var(--border-color);">
+                
+                <form action="{{ route('admin.discounts.update', $discount) }}" method="POST">
+                    @csrf
+                    @method('PUT')
 
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <form action="{{ route('admin.discounts.update', $discount) }}" method="POST">
-                        @csrf
-                        @method('PUT')
+                    {{-- Nama Diskon --}}
+                    <div class="mb-4">
+                        <label for="name" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Nama Diskon</label>
+                        <input type="text" class="form-control rounded-0 bg-subtle border-0 p-3 @error('name') is-invalid @enderror" 
+                               id="name" name="name" value="{{ old('name', $discount->name) }}" required placeholder="Contoh: Diskon Kemerdekaan">
+                        @error('name')
+                            <div class="invalid-feedback small">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Nama Diskon</label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                   id="name" name="name" value="{{ old('name', $discount->name) }}" required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                    {{-- Kode Diskon --}}
+                    <div class="mb-4">
+                        <label for="code" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Kode Diskon (Opsional)</label>
+                        <input type="text" class="form-control rounded-0 bg-subtle border-0 p-3 @error('code') is-invalid @enderror" 
+                               id="code" name="code" value="{{ old('code', $discount->code) }}" placeholder="Contoh: MERDEKA45">
+                        <div class="form-text small text-muted fst-italic mt-1" style="font-size: 0.75rem;">Kosongkan untuk diskon otomatis berlaku tanpa kode.</div>
+                        @error('code')
+                            <div class="invalid-feedback small">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Tipe & Nilai --}}
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label for="type" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Tipe Diskon</label>
+                            <select class="form-select rounded-0 bg-subtle border-0 p-3 @error('type') is-invalid @enderror" 
+                                    id="type" name="type" required>
+                                <option value="">-- Pilih Tipe --</option>
+                                <option value="percentage" {{ old('type', $discount->type) == 'percentage' ? 'selected' : '' }}>Persentase (%)</option>
+                                <option value="fixed" {{ old('type', $discount->type) == 'fixed' ? 'selected' : '' }}>Nominal Tetap (Rp)</option>
+                            </select>
+                            @error('type')
+                                <div class="invalid-feedback small">{{ $message }}</div>
                             @enderror
                         </div>
-
-                        <div class="mb-3">
-                            <label for="code" class="form-label">Kode Diskon (Opsional)</label>
-                            <input type="text" class="form-control @error('code') is-invalid @enderror" 
-                                   id="code" name="code" value="{{ old('code', $discount->code) }}">
-                            <div class="form-text">Kosongkan untuk diskon otomatis berlaku</div>
-                            @error('code')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="col-md-6">
+                            <label for="amount" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Nilai Diskon</label>
+                            <input type="number" class="form-control rounded-0 bg-subtle border-0 p-3 @error('amount') is-invalid @enderror" 
+                                   id="amount" name="amount" value="{{ old('amount', $discount->amount) }}" min="0" step="0.01" required placeholder="0">
+                            <div class="form-text small text-muted mt-1" id="amountHelp" style="font-size: 0.75rem;">
+                                {{ $discount->type === 'percentage' ? 'Masukkan persentase diskon (0-100%)' : 'Masukkan nominal diskon (Rp)' }}
+                            </div>
+                            @error('amount')
+                                <div class="invalid-feedback small">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="type" class="form-label">Tipe Diskon</label>
-                                    <select class="form-select @error('type') is-invalid @enderror" 
-                                            id="type" name="type" required>
-                                        <option value="">Pilih Tipe</option>
-                                        <option value="percentage" {{ old('type', $discount->type) == 'percentage' ? 'selected' : '' }}>
-                                            Persentase (%)
-                                        </option>
-                                        <option value="fixed" {{ old('type', $discount->type) == 'fixed' ? 'selected' : '' }}>
-                                            Nominal Tetap
-                                        </option>
-                                    </select>
-                                    @error('type')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="amount" class="form-label">Nilai Diskon</label>
-                                    <input type="number" class="form-control @error('amount') is-invalid @enderror" 
-                                           id="amount" name="amount" value="{{ old('amount', $discount->amount) }}" 
-                                           min="0" step="0.01" required>
-                                    <div class="form-text" id="amountHelp">
-                                        {{ $discount->type === 'percentage' ? 'Masukkan persentase diskon (0-100%)' : 'Masukkan nominal diskon (Rp)' }}
-                                    </div>
-                                    @error('amount')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
+                    {{-- Maksimal Penggunaan --}}
+                    <div class="mb-4">
+                        <label for="max_usage" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Maksimal Penggunaan</label>
+                        <input type="number" class="form-control rounded-0 bg-subtle border-0 p-3 @error('max_usage') is-invalid @enderror" 
+                               id="max_usage" name="max_usage" value="{{ old('max_usage', $discount->max_usage) }}" min="1" placeholder="Tidak Terbatas">
+                        <div class="form-text small text-muted fst-italic mt-1" style="font-size: 0.75rem;">Kosongkan jika tidak ada batasan jumlah pemakaian.</div>
+                        @error('max_usage')
+                            <div class="invalid-feedback small">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="max_usage" class="form-label">Maksimal Penggunaan (Opsional)</label>
-                            <input type="number" class="form-control @error('max_usage') is-invalid @enderror" 
-                                   id="max_usage" name="max_usage" value="{{ old('max_usage', $discount->max_usage) }}" min="1">
-                            <div class="form-text">Kosongkan untuk penggunaan tidak terbatas</div>
-                            @error('max_usage')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                    {{-- Tanggal Mulai & Akhir --}}
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Tanggal Mulai</label>
+                            <input type="date" class="form-control rounded-0 bg-subtle border-0 p-3 @error('start_date') is-invalid @enderror" 
+                                   id="start_date" name="start_date" value="{{ old('start_date', $discount->start_date->format('Y-m-d')) }}" required>
+                            @error('start_date')
+                                <div class="invalid-feedback small">{{ $message }}</div>
                             @enderror
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="start_date" class="form-label">Tanggal Mulai</label>
-                                    <input type="date" class="form-control @error('start_date') is-invalid @enderror" 
-                                           id="start_date" name="start_date" 
-                                           value="{{ old('start_date', $discount->start_date->format('Y-m-d')) }}" required>
-                                    @error('start_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="end_date" class="form-label">Tanggal Berakhir</label>
-                                    <input type="date" class="form-control @error('end_date') is-invalid @enderror" 
-                                           id="end_date" name="end_date" 
-                                           value="{{ old('end_date', $discount->end_date->format('Y-m-d')) }}" required>
-                                    @error('end_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.9rem;">Tanggal Berakhir</label>
+                            <input type="date" class="form-control rounded-0 bg-subtle border-0 p-3 @error('end_date') is-invalid @enderror" 
+                                   id="end_date" name="end_date" value="{{ old('end_date', $discount->end_date->format('Y-m-d')) }}" required>
+                            @error('end_date')
+                                <div class="invalid-feedback small">{{ $message }}</div>
+                            @enderror
                         </div>
+                    </div>
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="is_active" 
+                    {{-- Checkbox Aktif --}}
+                    <div class="mb-5 p-3 border bg-subtle d-flex align-items-center" style="border-color: #eee !important;">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input rounded-0 border-black" id="is_active" 
                                    name="is_active" value="1" {{ old('is_active', $discount->is_active) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_active">Aktifkan Diskon</label>
+                            <label class="form-check-label text-uppercase fw-bold ms-2" for="is_active" style="font-size: 0.8rem; letter-spacing: 0.05em; padding-top: 2px;">
+                                Aktifkan Diskon Ini
+                            </label>
                         </div>
+                    </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn">Update Diskon</button>
-                            <a href="{{ route('admin.discounts.index') }}" class="btn btn-outline-secondary">Batal</a>
-                        </div>
-                    </form>
-                </div>
+                    {{-- Action Buttons --}}
+                    <div class="d-flex gap-3 pt-2">
+                        <button type="submit" class="btn btn-primary-custom rounded-0 px-4 py-3 text-uppercase fw-bold flex-grow-1 flex-md-grow-0" style="font-size: 0.8rem; letter-spacing: 0.1em;">
+                            Simpan Perubahan
+                        </button>
+                        <a href="{{ route('admin.discounts.index') }}" class="btn btn-outline-custom rounded-0 px-4 py-3 text-uppercase fw-bold flex-grow-1 flex-md-grow-0" style="font-size: 0.8rem; letter-spacing: 0.1em;">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+
             </div>
         </div>
     </div>

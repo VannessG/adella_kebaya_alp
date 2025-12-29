@@ -4,7 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\URL; // <--- WAJIB DITAMBAHKAN AGAR TIDAK ERROR
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use App\Models\Branch;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +29,10 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('local')) {
             URL::forceScheme('https');
         }
+
+        View::composer('*', function ($view) {
+            $view->with('branches', Branch::where('is_active', true)->get());
+            $view->with('canResetPassword', Route::has('password.request'));
+        });
     }
 }

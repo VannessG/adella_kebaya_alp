@@ -61,7 +61,7 @@ class CartController extends Controller{
             $cart[$productId]['quantity'] = $quantity;
         }
         session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'Keranjang berhasil diperbarui.');
+        return redirect()->back();
     }
 
     public function remove($productId){
@@ -70,6 +70,6 @@ class CartController extends Controller{
             unset($cart[$productId]);
             session()->put('cart', $cart);
         }
-        return redirect()->back()->with('success', 'Produk berhasil dihapus dari keranjang.');
+        return redirect()->back();
     }
 }

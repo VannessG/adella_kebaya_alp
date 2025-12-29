@@ -37,6 +37,11 @@ class AdminController extends Controller{
                 ->when($branch, function($q) use ($branch) {
                     return $q->where('branch_id', $branch->id);
                 })->count(),
+
+            'pending_rents' => Rent::where('status', 'pending')
+                ->when($branch, function($q) use ($branch) {
+                    return $q->where('branch_id', $branch->id);
+                })->count(),
             
             'active_discount' => Discount::where('is_active', true)
                 ->whereDate('start_date', '<=', now())

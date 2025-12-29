@@ -297,13 +297,45 @@ class OrderController extends Controller{
     }
 
     public function index(){
-        $orders = Order::with(['products', 'reviews']) 
-            ->where('user_id', Auth::id())
+        // 1. Ambil data order milik user (sesuaikan dengan query Anda sebelumnya)
+        // Pastikan meload relasi 'products' agar tidak N+1 Query
+        $orders = Order::where('user_id', Auth::id())
+            ->with('products') 
             ->latest()
-            ->get();
+            ->get(); // Atau ->paginate(10) jika pakai pagination
 
-        $statusOptions = Order::getStatusOptions();
-        return view('order.index', compact('orders', 'statusOptions'));
+        // 2. STATUS OPTIONS (Definisikan di sini agar view tidak error)
+        $statusOptions = [
+            'pending' => 'Menunggu Pembayaran',
+            'processing' => 'Diproses',
+            'shipped' => 'Dikirim',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+            'awaiting_payment' => 'Menunggu Pembayaran'
+        ];
+
+        // 3. TRANSFORMASI DATA (Pindahkan logika PHP View ke sini)
+        // Jika menggunakan paginate(), ganti $orders->transform(...) menjadi $orders->getCollection()->transform(...)
+        $orders->transform(function ($order) {
+            
+            // A. Format Tanggal (Ganti Carbon di View)
+            $order->formatted_date = date('d M Y', strtotime($order->order_date));
+
+            // B. Format Nama Produk Pendek (Ganti Str::limit di View)
+            // Kita loop produk di dalam order ini untuk menambahkan property short_name
+            $order->products->transform(function ($product) {
+                $product->short_name = \Illuminate\Support\Str::limit($product->name, 10);
+                return $product;
+            });
+
+            return $order;
+        });
+
+        return view('order.index', [
+            'title' => 'Riwayat Pesanan',
+            'orders' => $orders,
+            'statusOptions' => $statusOptions
+        ]);
     }
 
     public function show($orderNumber){

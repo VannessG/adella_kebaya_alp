@@ -3,107 +3,153 @@
 @section('title', 'Sewa Kebaya')
 
 @section('content')
-<div class="container py-4">
+
+<div class="container pb-4">
+    <h1 class="display-5 fw-normal text-uppercase text-black mb-2 text-center text-md-start" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Form Penyewaan</h1>
+    <div class="d-none d-md-block" style="width: 60px; height: 1px; background-color: #000; margin-top: 15px;"></div>
+</div>
+
+<div class="container pb-5">
     <form action="{{ route('rent.store') }}" method="POST" id="rentForm">
         @csrf
         <input type="hidden" name="shipping_cost" id="shipping_cost_value" value="0">
-        
-        <div class="row g-4">
-            <div class="col-md-7">
-                <div class="card p-4 rounded-4 shadow-sm border-0 mb-4">
-                    <h5 class="fw-bold mb-3" style="font-family: 'Playfair Display';"><i class="bi bi-calendar-check me-2 text-primary"></i>Detail Sewa</h5>
-                    
-                    @if($product)
-                        <div class="d-flex align-items-center p-3 border rounded-4 mb-4 bg-light">
-                            <img src="{{ $product->image_url }}" class="rounded-3 me-3" style="width: 80px; height: 80px; object-fit: cover;">
-                            <div>
-                                <h6 class="fw-bold mb-1">{{ $product->name }}</h6>
-                                <p class="text-primary fw-bold mb-0">Rp {{ number_format($product->rent_price_per_day,0,',','.') }}/hari</p>
-                                <input type="hidden" name="products[0][id]" value="{{ $product->id }}">
-                                <input type="hidden" name="products[0][quantity]" value="1">
-                            </div>
-                        </div>
-                    @endif
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Tanggal Mulai</label>
-                            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Tanggal Selesai</label>
-                            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ date('Y-m-d', strtotime('+3 days')) }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Nama Penerima</label>
-                            <input type="text" name="customer_name" class="form-control" value="{{ auth()->user()->name }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">No. WhatsApp</label>
-                            <input type="text" name="customer_phone" class="form-control" value="{{ auth()->user()->phone }}" required>
+        @if($product)
+            <input type="hidden" name="products[0][id]" value="{{ $product->id }}">
+            <input type="hidden" name="products[0][quantity]" value="1">
+        @endif
+
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
+                    <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
+                        <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Detail Sewa</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if($product)
+                            <div class="d-flex align-items-center mb-4 pb-4 border-bottom" style="border-color: #eee !important;">
+                                <div class="border p-1 me-3">
+                                    <img src="{{ $product->image_url }}" class="d-block" style="width: 60px; height: 60px; object-fit: cover;">
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-uppercase text-black mb-1 small" style="letter-spacing: 0.05em;">{{ $product->name }}</h6>
+                                    <p class="text-muted small mb-0">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Tanggal Mulai</label>
+                                <input type="date" name="start_date" id="start_date" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Tanggal Selesai</label>
+                                <input type="date" name="end_date" id="end_date" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ date('Y-m-d', strtotime('+3 days')) }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Nama Penerima</label>
+                                <input type="text" name="customer_name" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ auth()->user()->name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">No. WhatsApp</label>
+                                <input type="text" name="customer_phone" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ auth()->user()->phone }}" required>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card p-4 rounded-4 shadow-sm border-0">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-truck me-2 text-primary"></i>Pengiriman</h5>
-                    
-                    <div class="btn-group w-100 mb-4" role="group">
-                        <input type="radio" class="btn-check delivery-type" name="delivery_type" id="pickup" value="pickup" checked>
-                        <label class="btn btn-outline-secondary py-3" for="pickup"><i class="bi bi-shop d-block fs-4 mb-1"></i> Ambil di Toko</label>
-                    
-                        <input type="radio" class="btn-check delivery-type" name="delivery_type" id="delivery" value="delivery">
-                        <label class="btn btn-outline-secondary py-3" for="delivery"><i class="bi bi-box-seam d-block fs-4 mb-1"></i> Ekspedisi</label>
+                <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
+                    <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
+                        <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Metode Pengiriman</h5>
                     </div>
+                    <div class="card-body p-4">
+                        <div class="btn-group w-100 border border-black rounded-0" role="group">
+                            <input type="radio" class="btn-check delivery-type" name="delivery_type" id="pickup" value="pickup" checked>
+                            <label class="btn btn-outline-custom rounded-0 py-3 text-uppercase fw-bold" for="pickup" style="font-size: 0.8rem; letter-spacing: 0.1em;">
+                                <i class="bi bi-shop d-block fs-4 mb-2"></i> Ambil di Toko
+                            </label>
+                        
+                            <input type="radio" class="btn-check delivery-type" name="delivery_type" id="delivery" value="delivery"> 
+                            <label class="btn btn-outline-custom rounded-0 py-3 text-uppercase fw-bold" for="delivery" style="font-size: 0.8rem; letter-spacing: 0.1em;">
+                                <i class="bi bi-box-seam d-block fs-4 mb-2"></i> Ekspedisi
+                            </label>
+                        </div>
 
-                    <div id="delivery-section" style="display:none;">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Provinsi</label>
-                                <select id="province_id" class="form-select">
-                                    <option value="">-- Pilih Provinsi --</option>
-                                    @foreach($provinces as $p)
-                                        <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Kota/Kabupaten</label>
-                                <select id="city_id" name="city_id" class="form-select" disabled><option value="">-- Pilih Provinsi Dulu --</option></select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Kecamatan</label>
-                                <select name="district_id" id="district_id" class="form-select" disabled><option value="">-- Pilih Kota Dulu --</option></select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Kurir</label>
-                                <select name="courier_code" id="courier_code" class="form-select">
-                                    <option value="lion">Lion Parcel</option>
-                                    <option value="jne">JNE</option>
-                                    <option value="pos">POS Indonesia</option>
-                                    <option value="tiki">TIKI</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Layanan</label>
-                                <select name="courier_service" id="courier_service" class="form-select"><option value="">Pilih Layanan...</option></select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Alamat Lengkap</label>
-                                <textarea name="customer_address" class="form-control" rows="3" required>{{ auth()->user()->address }}</textarea>
+                        <div id="delivery-section" class="mt-4 pt-4 border-top" style="display:none; border-color: #eee !important;">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Provinsi</label>
+                                    <select id="province_id" class="form-select rounded-0 bg-subtle border-0 p-3">
+                                        <option value="">-- Pilih Provinsi --</option>
+                                        @foreach($provinces as $p)
+                                            <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kota/Kabupaten</label>
+                                    <select id="city_id" name="city_id" class="form-select rounded-0 bg-subtle border-0 p-3" disabled>
+                                        <option value="">-- Pilih Provinsi Dulu --</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kecamatan</label>
+                                    <select name="district_id" id="district_id" class="form-select rounded-0 bg-subtle border-0 p-3" disabled>
+                                        <option value="">-- Pilih Kota Dulu --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kurir</label>
+                                    <select name="courier_code" id="courier_code" class="form-select rounded-0 bg-subtle border-0 p-3">
+                                        <option value="lion">Lion Parcel</option>
+                                        <option value="jne">JNE</option>
+                                        <option value="pos">POS Indonesia</option>
+                                        <option value="tiki">TIKI</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Layanan</label>
+                                    <select name="courier_service" id="courier_service" class="form-select rounded-0 bg-subtle border-0 p-3">
+                                        <option value="">Pilih Layanan...</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Alamat Lengkap</label>
+                                    <textarea name="customer_address" class="form-control rounded-0 bg-subtle border-0 p-3" rows="3" required>{{ auth()->user()->address }}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <button type="submit" class="btn btn-primary-custom w-100 py-3 text-uppercase fw-bold rounded-0 mb-5" style="letter-spacing: 0.15em;">
+                    Konfirmasi Sewa
+                </button>
             </div>
 
-            <div class="col-md-5">
-                <div class="card p-4 rounded-4 shadow-sm border-0 sticky-top" style="top: 20px;">
-                    <h5 class="fw-bold mb-4">Ringkasan Biaya</h5>
+            <div class="col-lg-4">
+                <div class="card border rounded-0 bg-subtle p-4 sticky-top" style="border-color: var(--border-color); top: 100px; z-index: 1;">
+                    <h5 class="fw-normal text-uppercase text-black mb-4 pb-3 border-bottom border-black" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Ringkasan Biaya</h5>
 
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Pilih Promo / Diskon</label>
-                        <select name="discount_id" id="discount_id" class="form-select rounded-pill">
+                    @if($product)
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="flex-shrink-0 border p-1 bg-white me-3" style="border-color: #e0e0e0;">
+                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="d-block object-fit-cover" style="width: 60px; height: 60px;">
+                        </div>
+                        <div class="flex-grow-1 min-width-0">
+                            <h6 class="text-uppercase small fw-bold text-black text-truncate mb-1" style="letter-spacing: 0.05em;" title="{{ $product->name }}">
+                                {{ $product->name }}
+                            </h6>
+                            <p class="text-muted small mb-0" style="font-size: 0.65rem;">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
+                        </div>
+                    </div>
+                    @endif
+                    
+                    <hr class="border-secondary opacity-25 my-4">
+
+                    <div class="mb-4">
+                        <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kode Promo</label>
+                        <select name="discount_id" id="discount_id" class="form-select rounded-0 bg-white border-0 p-2 text-uppercase small" style="font-size: 0.8rem;">
                             <option value="" data-amount="0">Tanpa Diskon</option>
                             @foreach($discounts as $d)
                                 <option value="{{ $d->id }}" data-type="{{ $d->type }}" data-amount="{{ $d->amount }}">
@@ -113,37 +159,25 @@
                         </select>
                     </div>
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Sewa (<span id="days-count">0</span> hari)</span>
-                        <span id="rent-subtotal" class="fw-bold text-dark">Rp 0</span>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted text-uppercase" style="letter-spacing: 0.05em;">Sewa (<span id="days-count">0</span> hari)</span>
+                        <span class="fw-bold text-black" id="rent-subtotal">Rp 0</span>
                     </div>
 
-                    <div class="d-flex justify-content-between mb-2 text-danger" id="discount-row" style="display:none !important;">
-                        <span>Potongan Diskon</span>
+                    <div class="d-flex justify-content-between mb-2 text-danger small" id="discount-row" style="display:none !important;">
+                        <span class="text-uppercase" style="letter-spacing: 0.05em;">Diskon</span>
                         <span class="fw-bold" id="discount-display">- Rp 0</span>
                     </div>
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Ongkos Kirim</span>
-                        <span id="shipping-cost-display" class="fw-bold text-dark">Rp 0</span>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-4">
-                        <span class="fw-bold fs-5">Total Bayar</span>
-                        <span class="fw-bold fs-4 text-primary" id="total-payment">Rp 0</span>
+                    <div class="d-flex justify-content-between mb-4 small">
+                        <span class="text-muted text-uppercase" style="letter-spacing: 0.05em;">Ongkir</span>
+                        <span class="fw-bold text-black" id="shipping-cost-display">Rp 0</span>
                     </div>
 
-                    <h6 class="fw-bold mb-3 small uppercase text-muted">Metode Pembayaran</h6>
-                    <div class="mb-4">
-                        @foreach($paymentMethods as $m)
-                            <div class="form-check p-3 border rounded-3 mb-2">
-                                <input class="form-check-input" type="radio" name="payment_method_id" id="pay{{$m->id}}" value="{{ $m->id }}" required>
-                                <label class="form-check-label w-100 fw-semibold" for="pay{{$m->id}}">{{ $m->name }}</label>
-                            </div>
-                        @endforeach
+                    <div class="d-flex justify-content-between border-top border-black pt-4">
+                        <span class="fw-bold fs-5 text-uppercase" style="font-family: 'Marcellus', serif;">Total</span>
+                        <span class="fw-bold fs-5 text-black" id="total-payment" style="font-family: 'Marcellus', serif;">Rp 0</span>
                     </div>
-
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm">Konfirmasi Sewa</button>
                 </div>
             </div>
         </div>

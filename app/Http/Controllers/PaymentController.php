@@ -145,12 +145,41 @@ class PaymentController extends Controller{
         return redirect()->route('home')->with('success', 'Transaksi sedang diproses.');
     }
 
-    public function adminIndex()
-    {
+    public function adminIndex(){
+        // 1. Fetch data with relationships
         $payments = Payment::with(['paymentMethod', 'transaction'])
             ->latest()
             ->paginate(10);
+
+        // 2. Transform data for the View (Move PHP logic here)
+        $payments->getCollection()->transform(function ($payment) {
             
+            // Logic: Check Transaction Type (Order or Rent)
+            // Check Full Class Name string stored in database
+            $isOrder = $payment->transaction_type === 'App\Models\Order';
+
+            // Add custom properties for View
+            $payment->view_type_label = $isOrder ? 'Jual' : 'Sewa';
+            $payment->view_type_is_order = $isOrder; // Boolean for styling
+
+            // Logic: Get Transaction Number safely
+            if ($payment->transaction) {
+                $payment->view_transaction_number = $isOrder 
+                    ? ($payment->transaction->order_number ?? '-') 
+                    : ($payment->transaction->rent_number ?? '-');
+            } else {
+                $payment->view_transaction_number = '-';
+            }
+
+            // Logic: Format Amount
+            $payment->view_amount_formatted = 'Rp ' . number_format($payment->amount, 0, ',', '.');
+
+            // Logic: Payment Method Name
+            $payment->view_method_name = $payment->paymentMethod->name ?? 'Manual';
+
+            return $payment;
+        });
+
         return view('admin.payments.index', [
             'title' => 'Manajemen Pembayaran',
             'payments' => $payments

@@ -18,7 +18,7 @@ class ReportController extends Controller{
             ->whereIn('status', ['processing', 'shipping', 'completed']) // Hanya yang valid/dibayar
             ->get()
             ->map(function ($item) {
-                $item->type = 'Order';
+                $item->type = 'Jual';
                 return $item;
             });
         // 3. Ambil data Rent (Sewa)

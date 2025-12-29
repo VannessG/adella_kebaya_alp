@@ -3,172 +3,199 @@
 @section('title', 'Detail Sewa ' . $rent->rent_number)
 
 @section('content')
-<div class="container">
+
+<div class="container pb-4">
+    <div class="row align-items-end">
+        <div class="col-md-8 text-center text-md-start">
+            <h1 class="display-5 fw-normal text-uppercase text-black mb-2" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Detail Penyewaan</h1>
+            <p class="text-muted small text-uppercase mb-0" style="letter-spacing: 0.1em;">No. Sewa: <span class="text-black fw-bold">{{ $rent->rent_number }}</span></p>
+        </div>
+        <div class="col-md-4 text-center text-md-end mt-4 mt-md-0">
+            <span class="badge rounded-0 border text-uppercase px-3 py-2" 
+                  style="font-size: 0.7rem; letter-spacing: 0.1em;
+                  @if($rent->status == 'returned') background-color: #000; color: #fff; border-color: #000;
+                  @elseif($rent->status == 'active') background-color: #fff; color: #000; border-color: #000;
+                  @elseif($rent->status == 'paid') background-color: #000; color: #fff; border-color: #000;
+                  @elseif($rent->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                  @elseif($rent->status == 'overdue') background-color: #fff; color: #dc3545; border-color: #dc3545;
+                  @elseif($rent->status == 'cancelled') background-color: #eee; color: #999; border-color: #eee;
+                  @endif">
+                {{ $statusOptions[$rent->status] }}
+            </span>
+        </div>
+    </div>
+    <div class="d-none d-md-block" style="width: 60px; height: 1px; background-color: #000; margin-top: 15px;"></div>
+</div>
+
+<div class="container pb-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="fw-bold text mb-1">Detail Penyewaan</h1>
-                    <p class="text-muted mb-0">No. Sewa: {{ $rent->rent_number }}</p>
-                </div>
-                <span class="badge fs-6 
-                    @if($rent->status == 'returned') bg-success
-                    @elseif($rent->status == 'active') bg-info
-                    @elseif($rent->status == 'paid') bg-warning
-                    @elseif($rent->status == 'pending') bg-secondary
-                    @elseif($rent->status == 'overdue') bg-danger
-                    @elseif($rent->status == 'cancelled') bg-dark
-                    @endif">
-                    {{ $statusOptions[$rent->status] }}
-                </span>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0 fw-semibold">Informasi Penyewaan</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-2"><strong>Cabang:</strong> {{ $rent->branch->name }}</p>
-                            <p class="mb-2"><strong>Alamat Cabang:</strong> {{ $rent->branch->address }}</p>
-                            <p class="mb-2"><strong>Periode Sewa:</strong> 
-                                {{ $rent->start_date->format('d M Y') }} - {{ $rent->end_date->format('d M Y') }}
-                            </p>
-                            <p class="mb-2"><strong>Lama Sewa:</strong> {{ $rent->calculateRentalDays() }} hari</p>
-                            <p class="mb-0"><strong>Metode:</strong> 
-                                {{ $rent->shipping_method == 'pickup' ? 'Ambil di Tempat' : 'Antar ke Alamat' }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light">
-                            <h5 class="card-title mb-0 fw-semibold">Informasi Pelanggan</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-2"><strong>Nama:</strong> {{ $rent->customer_name }}</p>
-                            <p class="mb-2"><strong>Telepon:</strong> {{ $rent->customer_phone }}</p>
-                            <p class="mb-0"><strong>Alamat:</strong> {{ $rent->customer_address }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0 fw-semibold">Detail Produk</h5>
-                </div>
-                <div class="card-body">
-                    @if($rent->products->isEmpty())
-                        <p class="text-muted">Tidak ada produk dalam penyewaan ini.</p>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Produk</th>
-                                        <th class="text-center">Jumlah</th>
-                                        <th class="text-end">Harga Sewa/hari</th>
-                                        <th class="text-end">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($rent->products as $product)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
-                                                     class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover;">
-                                                <div>
-                                                    <b>{{ $product->name }}</b>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">{{ $product->pivot->quantity }}</td>
-                                        <td class="text-end">Rp {{ number_format($product->pivot->price_per_day, 0, ',', '.') }}</td>
-                                        <td class="text-end">Rp {{ number_format($product->pivot->subtotal, 0, ',', '.') }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3" class="text-end fw-bold">Subtotal Sewa:</td>
-                                        <td class="text-end">Rp {{ number_format($rent->total_amount - $rent->shipping_cost, 0, ',', '.') }}</td>
-                                    </tr>
-                                    @if($rent->shipping_cost > 0)
-                                    <tr>
-                                        <td colspan="3" class="text-end fw-bold">Biaya Pengantaran:</td>
-                                        <td class="text-end">Rp {{ number_format($rent->shipping_cost, 0, ',', '.') }}</td>
-                                    </tr>
-                                    @endif
-                                    <tr>
-                                        <td colspan="3" class="text-end fw-bold">Total:</td>
-                                        <td class="text-end fw-bold text fs-5">
-                                            Rp {{ number_format($rent->total_amount, 0, ',', '.') }}
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- PERBAIKAN: BLOK VERIFIKASI PEMBAYARAN ADMIN --}}
-            @if($rent->payment)
-            <div class="card shadow-sm mb-4 border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0 fw-semibold">Informasi Pembayaran & Verifikasi Admin</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Metode:</strong> {{ $rent->payment->paymentMethod->name }}</p>
-                            <p class="mb-2"><strong>Status:</strong> 
-                                <span class="badge 
-                                    @if($rent->payment->status == 'success') bg-success
-                                    @elseif($rent->payment->status == 'processing') bg-warning text-dark
-                                    @elseif($rent->payment->status == 'failed') bg-danger
-                                    @elseif($rent->payment->status == 'expired') bg-secondary
-                                    @endif">
-                                    {{ \App\Models\Payment::getStatusOptions()[$rent->payment->status] }}
-                                </span>
-                            </p>
-                            <p class="mb-2"><strong>Total Bayar:</strong> Rp {{ number_format($rent->payment->amount, 0, ',', '.') }}</p>
-                            
-                            {{-- TOMBOL AKSI VERIFIKASI --}}
-                            @if($rent->payment->status === 'processing' && $rent->payment->proof_image)
-                            <div class="mt-4 p-3 bg-light rounded border">
-                                <p class="small fw-bold mb-2">Tindakan Admin:</p>
-                                <div class="d-flex gap-2">
-                                    <form action="{{ route('admin.payments.verify', $rent->payment->id) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="action" value="approve">
-                                        <button type="submit" class="btn btn-success btn-sm px-4">Approve</button>
-                                    </form>
-                                    <form action="{{ route('admin.payments.verify', $rent->payment->id) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="action" value="reject">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm px-4">Reject</button>
-                                    </form>
-                                </div>
+            
+            <div class="row g-4 mb-5">
+                {{-- INFO PENYEWAAN --}}
+                <div class="col-md-6">
+                    <div class="card border rounded-0 h-100 bg-white p-4" style="border-color: #E0E0E0;">
+                        <h6 class="fw-bold text-black text-uppercase mb-3 small" style="letter-spacing: 0.1em;">Informasi Penyewaan</h6>
+                        <div class="small text-muted text-uppercase" style="line-height: 2;">
+                            <div class="d-flex justify-content-between border-bottom pb-2 mb-2" style="border-color: #f5f5f5 !important;">
+                                <span>Cabang</span>
+                                <span class="text-black fw-bold">{{ $rent->branch->name }}</span>
                             </div>
-                            @endif
+                            <div class="mb-2">
+                                <span class="d-block mb-1">Alamat Cabang</span>
+                                <span class="text-black">{{ $rent->branch->address }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-bottom pb-2 mb-2" style="border-color: #f5f5f5 !important;">
+                                <span>Periode</span>
+                                <span class="text-black">{{ $rent->start_date->format('d M') }} - {{ $rent->end_date->format('d M Y') }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-bottom pb-2 mb-2" style="border-color: #f5f5f5 !important;">
+                                <span>Durasi</span>
+                                <span class="text-black">{{ $rent->calculateRentalDays() }} Hari</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Metode</span>
+                                <span class="text-black">{{ $rent->shipping_method == 'pickup' ? 'AMBIL DI TEMPAT' : 'ANTAR KE ALAMAT' }}</span>
+                            </div>
                         </div>
-                        
+                    </div>
+                </div>
+
+                {{-- INFO PELANGGAN --}}
+                <div class="col-md-6">
+                    <div class="card border rounded-0 h-100 bg-white p-4" style="border-color: #E0E0E0;">
+                        <h6 class="fw-bold text-black text-uppercase mb-3 small" style="letter-spacing: 0.1em;">Informasi Pelanggan</h6>
+                        <div class="small text-muted text-uppercase" style="line-height: 2;">
+                            <div class="d-flex justify-content-between border-bottom pb-2 mb-2" style="border-color: #f5f5f5 !important;">
+                                <span>Nama</span>
+                                <span class="text-black fw-bold">{{ $rent->customer_name }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-bottom pb-2 mb-2" style="border-color: #f5f5f5 !important;">
+                                <span>Telepon</span>
+                                <span class="text-black">{{ $rent->customer_phone }}</span>
+                            </div>
+                            <div>
+                                <span class="d-block mb-1">Alamat</span>
+                                <span class="text-black">{{ $rent->customer_address }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- DETAIL PRODUK --}}
+            <div class="card border rounded-0 bg-white p-4 mb-5" style="border-color: #E0E0E0;">
+                <h6 class="fw-bold text-black text-uppercase mb-4 small pb-2 border-bottom border-black" style="letter-spacing: 0.1em;">Detail Produk</h6>
+                
+                @if($rent->products->isEmpty())
+                    <p class="text-muted small fst-italic text-center py-4">Tidak ada produk dalam penyewaan ini.</p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-subtle">
+                                <tr>
+                                    <th class="ps-0 py-3 text-uppercase small text-muted font-weight-bold" style="letter-spacing: 0.1em; font-size: 0.65rem;">Produk</th>
+                                    <th class="py-3 text-uppercase small text-muted font-weight-bold text-center" style="letter-spacing: 0.1em; font-size: 0.65rem;">Jumlah</th>
+                                    <th class="py-3 text-uppercase small text-muted font-weight-bold text-end" style="letter-spacing: 0.1em; font-size: 0.65rem;">Harga Sewa/Hari</th>
+                                    <th class="py-3 text-uppercase small text-muted font-weight-bold text-end" style="letter-spacing: 0.1em; font-size: 0.65rem;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($rent->products as $product)
+                                <tr style="border-bottom: 1px solid #f0f0f0;">
+                                    <td class="ps-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="border p-1 bg-white me-3" style="width: 50px; height: 50px; border-color: #eee !important;">
+                                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-100 h-100 object-fit-cover">
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-black small text-uppercase" style="letter-spacing: 0.05em;">{{ $product->name }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center py-3 small">{{ $product->pivot->quantity }}</td>
+                                    <td class="text-end py-3 small">Rp {{ number_format($product->pivot->price_per_day, 0, ',', '.') }}</td>
+                                    <td class="text-end py-3 fw-bold text-black small">Rp {{ number_format($product->pivot->subtotal, 0, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="bg-subtle">
+                                <tr>
+                                    <td colspan="3" class="text-end py-3 text-muted small text-uppercase">Subtotal Sewa</td>
+                                    <td class="text-end py-3 fw-bold text-black small">Rp {{ number_format($rent->total_amount - $rent->shipping_cost, 0, ',', '.') }}</td>
+                                </tr>
+                                @if($rent->shipping_cost > 0)
+                                <tr>
+                                    <td colspan="3" class="text-end py-3 text-muted small text-uppercase">Biaya Pengantaran</td>
+                                    <td class="text-end py-3 fw-bold text-black small">Rp {{ number_format($rent->shipping_cost, 0, ',', '.') }}</td>
+                                </tr>
+                                @endif
+                                <tr class="bg-black text-white">
+                                    <td colspan="3" class="text-end py-3 text-uppercase small" style="letter-spacing: 0.1em;">Total Keseluruhan</td>
+                                    <td class="text-end py-3 fw-bold fs-6">Rp {{ number_format($rent->total_amount, 0, ',', '.') }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                @endif
+            </div>
+
+            {{-- VERIFIKASI PEMBAYARAN --}}
+            @if($rent->payment)
+            <div class="card border rounded-0 bg-white p-4 mb-5" style="border-color: #E0E0E0;">
+                <h6 class="fw-bold text-black text-uppercase mb-4 small pb-2 border-bottom border-black" style="letter-spacing: 0.1em;">Verifikasi Pembayaran</h6>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <div class="small text-uppercase" style="line-height: 2; letter-spacing: 0.05em;">
+                                <div class="mb-2">
+                                    <span class="text-muted d-block mb-1">Metode Pembayaran</span>
+                                    <span class="fw-bold text-black">{{ $rent->payment->paymentMethod->name }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="text-muted d-block mb-1">Status</span>
+                                    <span class="badge rounded-0 border px-2 py-1 bg-black text-white border-black">
+                                        {{ $rent->payment->status }}
+                                    </span>
+                                </div>
+                                <div class="mb-4">
+                                    <span class="text-muted d-block mb-1">Total Bayar</span>
+                                    <span class="fw-bold text-black fs-5">Rp {{ number_format($rent->payment->amount, 0, ',', '.') }}</span>
+                                </div>
+
+                                {{-- AKSI ADMIN --}}
+                                @if($rent->payment->status === 'processing' && $rent->payment->proof_image)
+                                <div class="p-3 bg-subtle border border-black mt-3">
+                                    <p class="small fw-bold mb-3 text-black">Tindakan Admin:</p>
+                                    <div class="d-flex gap-2">
+                                        <form action="{{ route('admin.payments.verify', $rent->payment->id) }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="btn btn-black rounded-0 btn-sm px-4 text-uppercase">Approve</button>
+                                        </form>
+                                        <form action="{{ route('admin.payments.verify', $rent->payment->id) }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="btn btn-outline-danger rounded-0 btn-sm px-4 text-uppercase">Reject</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- BUKTI TRANSFER --}}
                         @if($rent->payment->proof_image)
                         <div class="col-md-6 text-md-end">
-                            <p class="mb-2 small fw-bold">Bukti Transfer:</p>
-                            <a href="{{ asset('storage/' . $rent->payment->proof_image) }}" target="_blank">
+                            <p class="small text-muted text-uppercase mb-2" style="letter-spacing: 0.1em;">Bukti Transfer</p>
+                            <a href="{{ asset('storage/' . $rent->payment->proof_image) }}" target="_blank" class="d-inline-block border p-1 bg-white" style="border-color: #eee !important;">
                                 <img src="{{ asset('storage/' . $rent->payment->proof_image) }}" 
-                                     alt="Bukti Pembayaran" class="img-fluid rounded shadow-sm border @if($rent->payment->status === 'failed') border-danger border-4 @endif" 
-                                     style="max-height: 250px; cursor: zoom-in;">
+                                     alt="Bukti Pembayaran" 
+                                     class="img-fluid d-block" 
+                                     style="max-height: 250px;">
                             </a>
                             @if($rent->payment->status === 'failed')
-                                <div class="text-danger small mt-1 fw-bold">BUKTI DITOLAK - Menunggu Re-upload</div>
+                                <div class="text-danger small mt-2 fw-bold text-uppercase" style="letter-spacing: 0.05em;">Bukti Ditolak - Menunggu Upload Ulang</div>
                             @endif
                         </div>
                         @endif
@@ -177,23 +204,24 @@
             </div>
             @endif
 
-            <div class="d-flex justify-content-between">
-                <a href="{{ route('rent.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Kembali
+            {{-- FOOTER ACTIONS --}}
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: #eee !important;">
+                <a href="{{ route('admin.rents.index') }}" class="btn btn-link text-decoration-none text-muted text-uppercase p-0 small hover-text-black" style="font-size: 0.75rem; letter-spacing: 0.1em;">
+                    <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
                 </a>
                 
-                <div class="d-flex gap-2">
-                    @if($rent->canBeCancelled() && !$rent->payment)
-                        <form action="{{ route('rent.cancel', $rent) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-danger" 
-                                    onclick="return confirm('Yakin ingin membatalkan penyewaan ini?')">
-                                Batalkan Sewa
-                            </button>
-                        </form>
-                    @endif
-                </div>
+                @if($rent->canBeCancelled() && !$rent->payment)
+                    <form action="{{ route('rent.cancel', $rent) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger rounded-0 px-4 py-2 text-uppercase fw-bold small" 
+                                style="letter-spacing: 0.1em;"
+                                onclick="return confirm('Yakin ingin membatalkan penyewaan ini?')">
+                            Batalkan Sewa
+                        </button>
+                    </form>
+                @endif
             </div>
+
         </div>
     </div>
 </div>

@@ -141,8 +141,9 @@ class RentController extends Controller{
             ]);
             $rent->products()->sync($rentProducts);
 
-            if ($appliedDiscount) { 
-                $appliedDiscount->increment('used_count'); 
+            $appliedDiscount = null; 
+            if ($request->filled('discount_id')) {
+                $appliedDiscount = Discount::find($request->discount_id);
             }
 
             $paymentMethod = PaymentMethod::find($request->payment_method_id);

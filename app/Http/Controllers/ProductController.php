@@ -16,7 +16,9 @@ class ProductController extends Controller{
             return redirect()->route('select.branch');
         }
 
-        $query = Product::where('branch_id', $branch->id)->where('is_available', true);
+        $query = Product::where('branch_id', $branch->id)->where(function($q) {
+            $q->where('is_available', true)->orWhere('is_available_for_rent', true);
+        });
 
         if ($categoryId) {
             $query->where('category_id', $categoryId);
@@ -45,13 +47,23 @@ class ProductController extends Controller{
     public function show($id){
         $branch = session('selected_branch');
         $product = Product::where('branch_id', $branch->id)
-            ->where('is_available', true)
+            ->where(function($query) {
+                $query->where('is_available', true)
+                      ->orWhere('is_available_for_rent', true);
+            })
             ->findOrFail($id);
             
+        $approvedReviews = $product->reviews()
+        ->where('is_approved', true)
+        ->with('user') // Eager load user agar tidak N+1 query saat ambil inisial nama
+        ->latest()
+        ->get();
+
         return view('katalog.detail', [
             'title' => 'Detail ' . $product->name,
             'product' => $product,
             'category' => $product->category,
+            'approvedReviews' => $approvedReviews
         ]);
     }
 

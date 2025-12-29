@@ -9,19 +9,69 @@ use Illuminate\Http\Request;
 
 class ShiftController extends Controller{
     public function index(Request $request){
-        $query = Shift::with('branch');
+        // 1. Query Dasar dengan Filter Tanggal (jika ada)
+        $query = Shift::with('branch')->latest('shift_day');
 
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('shift_day', [$request->start_date, $request->end_date]);
+        if ($request->has('start_date') && $request->start_date) {
+            $query->whereDate('shift_day', '>=', $request->start_date);
         }
-        $shifts = $query->latest()->get();
-        return view('admin.shifts.index', compact('shifts'));
+
+        if ($request->has('end_date') && $request->end_date) {
+            $query->whereDate('shift_day', '<=', $request->end_date);
+        }
+
+        // 2. Ambil data (gunakan get() atau paginate() sesuai kebutuhan)
+        // Di sini saya gunakan get() agar logika transform lebih mudah, tapi paginate() juga bisa dengan cara khusus
+        $shifts = $query->get(); 
+        // 3. Transform Data untuk View (Pindahkan Logika PHP View ke sini)
+        $shifts->transform(function ($shift) {
+            // Logika Format Tanggal
+            $shift->view_date = $shift->shift_day->format('d/m/Y');
+            // Logika Format Jam Kerja
+            $start = substr($shift->start_time, 0, 5);
+            $end = substr($shift->end_time, 0, 5);
+            $shift->view_time = "$start - $end";
+            // Logika Hitung Absensi
+            $attendanceData = $shift->attendance_data ?? [];
+            $shift->view_total_staff = count($attendanceData);
+            // Hitung jumlah yang hadir
+            $shift->view_present_count = collect($attendanceData)
+                ->filter(fn($val) => $val === 'hadir')
+                ->count();
+            return $shift;
+        });
+        return view('admin.shifts.index', [
+            'title' => 'Rekap Shift',
+            'shifts' => $shifts
+        ]);
     }
 
-    public function show(Shift $shift){
-        // Untuk melihat detail siapa saja yang hadir
-        $employees = Employee::whereIn('id', array_keys($shift->attendance_data))->get();
-        return view('admin.shifts.show', compact('shift', 'employees'));
+    public function show($id){
+        // 1. Ambil data Shift
+        $shift = Shift::with('branch')->findOrFail($id);
+
+        // 2. Ambil pegawai di cabang tersebut
+        // Pastikan model Employee diload (sesuaikan query jika Anda memfilter pegawai aktif saja)
+        $employees = Employee::where('branch_id', $shift->branch_id)->get();
+
+        // 3. LOGIKA DIPINDAHKAN KE SINI
+        // Kita map/loop setiap pegawai untuk menentukan statusnya berdasarkan data di shift
+        $employees->transform(function ($employee) use ($shift) {
+            // Ambil status dari JSON attendance_data, default 'tidak_hadir'
+            $rawStatus = $shift->attendance_data[$employee->id] ?? 'tidak_hadir';
+
+            // Siapkan properti tambahan untuk View
+            $employee->attendance_status_raw = $rawStatus; // Untuk logika warna (hadir/tidak_hadir)
+            $employee->attendance_label = str_replace('_', ' ', strtoupper($rawStatus)); // Untuk teks label (HADIR/TIDAK HADIR)
+            
+            return $employee;
+        });
+
+        return view('admin.shifts.show', [
+            'shift' => $shift,
+            'employees' => $employees,
+            'title' => 'Detail Rekap Absensi'
+        ]);
     }
 
     public function create(){

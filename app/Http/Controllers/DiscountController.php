@@ -7,7 +7,34 @@ use Illuminate\Http\Request;
 
 class DiscountController extends Controller{
     public function index(){
+        // 1. Ambil data dengan pagination
         $discounts = Discount::latest()->paginate(10);
+
+        // 2. Manipulasi data untuk kebutuhan View (Pindahkan logika PHP di sini)
+        // Kita gunakan getCollection()->transform() karena data berbentuk Paginator
+        $discounts->getCollection()->transform(function ($discount) {
+            
+            // Logika Status Aktif (Tanggal & Flag)
+            $now = now();
+            $isRealActive = $discount->is_active && $now->between($discount->start_date, $discount->end_date);
+            
+            // Menambahkan properti baru ke objek $discount khusus untuk View
+            $discount->view_status_active = $isRealActive; // Boolean untuk warna badge
+            $discount->view_status_label = $isRealActive ? 'Aktif' : 'Tidak Aktif'; // Teks Label
+            
+            // Logika Tipe Label (% atau IDR)
+            $discount->view_type_label = $discount->type === 'percentage' ? '%' : 'IDR';
+            
+            // Logika Format Nilai (Persen atau Rupiah)
+            $discount->view_amount_formatted = $discount->type === 'percentage'
+                ? $discount->amount . '%'
+                : 'Rp ' . number_format($discount->amount, 0, ',', '.');
+
+            // Logika Format Periode
+            $discount->view_period = $discount->start_date->format('d M Y') . ' - ' . $discount->end_date->format('d M Y');
+            return $discount;
+        });
+
         return view('admin.discounts.index', [
             'title' => 'Manajemen Diskon',
             'discounts' => $discounts
