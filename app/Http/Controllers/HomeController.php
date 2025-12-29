@@ -28,11 +28,4 @@ class HomeController extends Controller{
             'activeDiscount' => $activeDiscount
         ]);
     }
-
-    public function about(){
-        // Middleware sudah handle cek cabang
-        return view('about', [
-            'title' => 'Tentang Kami'
-        ]);
-    }
 }

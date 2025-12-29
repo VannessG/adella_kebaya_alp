@@ -24,7 +24,6 @@ Route::post('/change-branch', [BranchController::class, 'change'])->name('branch
 
 Route::middleware(['branch.selected'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('/about', [HomeController::class, 'about'])->name('about');
 
     Route::get('/katalog', [ProductController::class, 'index'])->name('katalog.index');
     Route::get('/katalog/detail/{id}', [ProductController::class, 'show'])->name('katalog.show');

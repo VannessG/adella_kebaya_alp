@@ -122,6 +122,23 @@
                         </div>
                     </div>
                 </div>
+        
+                <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
+                    <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
+                        <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Metode Pembayaran</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @foreach($paymentMethods as $method)
+                        <div class="form-check mb-3 p-3 border rounded-0 cursor-pointer hover-bg-subtle" style="border-color: #eee;">
+                            <input class="form-check-input mt-1" type="radio" name="payment_method_id" id="pay{{$method->id}}" value="{{$method->id}}" required style="border-color: #000;">
+                            <label class="form-check-label ms-2 w-100 cursor-pointer" for="pay{{$method->id}}">
+                                <span class="fw-bold text-uppercase small text-black" style="letter-spacing: 0.05em;">{{ $method->name }}</span>
+                            </label>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary-custom w-100 py-3 text-uppercase fw-bold rounded-0 mb-5" style="letter-spacing: 0.15em;">
                     Konfirmasi Sewa
                 </button>
@@ -136,11 +153,11 @@
                         <div class="flex-shrink-0 border p-1 bg-white me-3" style="border-color: #e0e0e0;">
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="d-block object-fit-cover" style="width: 60px; height: 60px;">
                         </div>
-                        <div class="flex-grow-1 min-width-0">
-                            <h6 class="text-uppercase small fw-bold text-black text-truncate mb-1" style="letter-spacing: 0.05em;" title="{{ $product->name }}">
+                        <div class="flex-grow-1 overflow-hidden">
+                            <h6 class="text-uppercase small fw-bold text-black mb-1 text-break" style="letter-spacing: 0.05em; line-height: 1.4;">
                                 {{ $product->name }}
                             </h6>
-                            <p class="text-muted small mb-0" style="font-size: 0.65rem;">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
+                            <p class="mb-0" style="font-size: 0.75rem;">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
                         </div>
                     </div>
                     @endif
