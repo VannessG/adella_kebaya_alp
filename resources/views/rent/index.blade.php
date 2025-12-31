@@ -37,12 +37,28 @@
                                 <td class="py-4 fw-bold text-black">Rp {{ number_format($rent->total_amount, 0, ',', '.') }}</td>
                                 <td class="py-4">
                                     <span class="badge rounded-0 fw-normal text-uppercase px-3 py-2 small border" 
-                                          style="letter-spacing: 0.05em; font-size: 0.7rem;
-                                          @if($rent->status == 'completed') background-color: #000; color: #fff; border-color: #000;
-                                          @elseif($rent->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
-                                          @elseif($rent->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
-                                          @else background-color: #fff; color: #000; border-color: #000; @endif">
-                                        {{ $statusOptions[$rent->status] ?? $rent->status }}
+                                        style="letter-spacing: 0.05em; font-size: 0.7rem;
+                                        @if($rent->status == 'completed') background-color: #000; color: #fff; border-color: #000;
+                                        @elseif($rent->status == 'payment_check') background-color: #ffc107; color: #000; border-color: #ffc107; {{-- Warna Kuning untuk Pengecekan --}}
+                                        @elseif($rent->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                                        @elseif($rent->status == 'active') background-color: #fff; color: #000; border-color: #000;
+                                        @elseif($rent->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
+                                        @else background-color: #fff; color: #000; border-color: #000; @endif">
+                                        @if($rent->status == 'payment_check')
+                                            Pengecekan Pembayaran
+                                        @elseif($rent->status == 'pending')
+                                            Menunggu Pembayaran
+                                        @elseif($rent->status == 'processing')
+                                            Diproses
+                                        @elseif($rent->status == 'shipping')
+                                            Dikirim
+                                        @elseif($rent->status == 'completed')
+                                            Selesai
+                                        @elseif($rent->status == 'cancelled')
+                                            Dibatalkan
+                                        @else
+                                            {{ $rent->status }}
+                                        @endif
                                     </span>
                                 </td>
                                 <td class="pe-4 py-4 text-end">

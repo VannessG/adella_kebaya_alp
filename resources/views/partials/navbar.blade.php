@@ -22,9 +22,10 @@
                 @auth
                     @if(auth()->user()->role === 'admin')
                         <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->routeIs('admin.dashboard') ? 'active fw-bold' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->routeIs('admin.products.*') ? 'active fw-bold' : '' }}" href="{{ route('admin.products.index') }}">Produk</a></li>
                         <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->routeIs('admin.orders.*') ? 'active fw-bold' : '' }}" href="{{ route('admin.orders.index') }}">Penjualan</a></li>
                         <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->routeIs('admin.rents.*') ? 'active fw-bold' : '' }}" href="{{ route('admin.rents.index') }}">Penyewaan</a></li>
-                        <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->routeIs('admin.products.*') ? 'active fw-bold' : '' }}" href="{{ route('admin.products.index') }}">Produk</a></li>
+                        <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->routeIs('admin.reports.*') ? 'active fw-bold' : '' }}" href="{{ route('admin.reports.index') }}">Laporan</a></li>
                         <li class="nav-item dropdown px-3">
                             <a class="nav-link dropdown-toggle text-link-custom" href="#" data-bs-toggle="dropdown">Kepegawaian</a>
                             <ul class="dropdown-menu rounded-0 border shadow-sm mt-3 p-0" style="border-color: #E0E0E0;">
@@ -33,9 +34,6 @@
                                 </li>
                                 <li>
                                     <a class="dropdown-item py-3 border-bottom text-uppercase custom-dropdown-item" href="{{ route('admin.shifts.index') }}" style="font-size: 0.8rem; letter-spacing: 0.05em;">Kehadiran</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item py-3 text-uppercase custom-dropdown-item" href="{{ route('admin.reports.index') }}" style="font-size: 0.8rem; letter-spacing: 0.05em;">Laporan</a>
                                 </li>
                             </ul>
                         </li>
@@ -50,7 +48,6 @@
                 @guest
                     <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->is('/') ? 'active border-bottom border-black' : '' }}" href="{{ url('/') }}">Beranda</a></li>
                     <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->is('katalog*') ? 'active border-bottom border-black' : '' }}" href="{{ url('/katalog') }}">Katalog</a></li>
-                    <li class="nav-item px-3"><a class="nav-link text-link-custom {{ request()->is('about*') ? 'active border-bottom border-black' : '' }}" href="{{ url('/about') }}">Tentang</a></li>
                 @endguest
             </ul>
 
@@ -67,7 +64,6 @@
                                     <form action="{{ route('branch.change') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="branch_id" value="{{ $branch->id }}">
-                                        {{-- Tambahkan class custom-dropdown-item dan border-bottom --}}
                                         <button type="submit" class="dropdown-item py-3 border-bottom text-uppercase custom-dropdown-item w-100 text-start" style="font-size: 0.75rem; letter-spacing: 0.05em;">
                                             {{ $branch->city }}
                                         </button>

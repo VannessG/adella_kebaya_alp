@@ -25,7 +25,8 @@ class Rent extends Model{
         'customer_address', 
         'customer_name', 
         'customer_phone', 
-        'notes'
+        'notes',
+        'payment_proof'
     ];
 
     protected $casts = [

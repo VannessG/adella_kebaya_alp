@@ -140,4 +140,5 @@
         @endif
     </div>
 </div>
+<a href="{{ url('/katalog') }}" class="btn btn-link text-decoration-none text-muted text-uppercase small" style="letter-spacing: 0.1em;"><i class="bi bi-arrow-left me-2"></i> Kembali</a>
 @endsection

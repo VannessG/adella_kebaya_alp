@@ -51,7 +51,7 @@
                         @else
                             <div class="fw-bold text-black">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
                         @endif
-                        <a href="{{ url('/katalog/detail/' . $product->id) }}" class="btn btn-link text-decoration-none text-black small mt-3 p-2 stretched-link text-uppercase fw-bold border-bottom border-black rounded-0 btn-detail" style="letter-spacing: 0.15em; font-size: 0.7rem; display: inline-block;">Lihat Detail</a>
+                        <a href="{{ url('/katalog/detail/' . $product->id) }}" class="btn btn-outline-custom btn-sm rounded-0 px-3 text-uppercase mt-3" style="font-size: 0.7rem; letter-spacing: 0.1em; padding: 10px;">Lihat Detail</a>
                     </div>
                 </div>
             </div>

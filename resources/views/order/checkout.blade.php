@@ -112,6 +112,7 @@
                 </div>
 
                 {{-- 3. METODE PEMBAYARAN --}}
+                {{-- 3. METODE PEMBAYARAN --}}
                 <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
                     <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
                         <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Metode Pembayaran</h5>
@@ -119,12 +120,34 @@
                     <div class="card-body p-4">
                         @foreach($paymentMethods as $method)
                         <div class="form-check mb-3 p-3 border rounded-0 cursor-pointer hover-bg-subtle" style="border-color: #eee;">
-                            <input class="form-check-input mt-1" type="radio" name="payment_method_id" id="pay{{$method->id}}" value="{{$method->id}}" required style="border-color: #000;">
+                            <input class="form-check-input mt-1 payment-method-radio" 
+                                   type="radio" 
+                                   name="payment_method_id" 
+                                   id="pay{{$method->id}}" 
+                                   value="{{$method->id}}" 
+                                   data-name="{{ strtolower($method->name) }}"
+                                   required 
+                                   style="border-color: #000;">
                             <label class="form-check-label ms-2 w-100 cursor-pointer" for="pay{{$method->id}}">
-                                <span class="fw-bold text-uppercase small text-black" style="letter-spacing: 0.05em;">{{ $method->name }}</span>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-uppercase small text-black" style="letter-spacing: 0.05em;">{{ $method->name }}</span>
+                                    @if($method->description)
+                                        <small class="text-muted ms-2">{{ $method->description }}</small>
+                                    @endif
+                                </div>
                             </label>
                         </div>
                         @endforeach
+
+                        {{-- AREA UPLOAD BUKTI TRANSFER --}}
+                        <div id="payment-proof-section" class="mt-4 pt-4 border-top" style="display: none; border-color: #eee !important;">
+                            <div class="alert alert-light border rounded-0 mb-3" role="alert">
+                                <small class="text-muted"><i class="bi bi-info-circle me-2"></i>Silakan transfer sesuai total tagihan, lalu unggah bukti transfer di bawah ini.</small>
+                            </div>
+                            <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Bukti Transfer</label>
+                            <input type="file" name="payment_proof" id="payment_proof" class="form-control rounded-0 bg-subtle border-0 p-3" accept="image/*">
+                            <div class="form-text small text-muted mt-2">Format: JPG, PNG, JPEG. Maks: 2MB.</div>
+                        </div>
                     </div>
                 </div>
 
@@ -132,6 +155,7 @@
                     Konfirmasi Pesanan
                 </button>
             </div>
+            
 
             {{-- KOLOM KANAN (RINGKASAN) --}}
             <div class="col-lg-4">
@@ -335,6 +359,19 @@ $(document).ready(function() {
             }
         });
     }
+
+    // 5. Toggle Upload Bukti Transfer
+    $('.payment-method-radio').on('change', function() {
+        const methodName = $(this).data('name');
+        if (methodName.includes('transfer') || methodName.includes('bank')) {
+            $('#payment-proof-section').slideDown();
+            $('#payment_proof').prop('required', true);
+        } else {
+            $('#payment-proof-section').slideUp();
+            $('#payment_proof').prop('required', false);
+            $('#payment_proof').val('');
+        }
+    });
 
     // Event Listener Kalkulasi
     $('#district_id, #courier_code').on('change', function() {

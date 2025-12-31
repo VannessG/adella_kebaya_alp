@@ -115,9 +115,6 @@ class OrderController extends Controller{
 
     public function checkout(Request $request){
         $branch = session('selected_branch');
-        Log::info("=== DIAGNOSA DATA MASUK ===");
-        Log::info("Input direct_products: " . json_encode($request->direct_products));
-        Log::info("Session cart: " . json_encode(session()->get('cart')));
 
         if (!$branch) {
             return redirect()->route('select.branch')->with('error', 'Silakan pilih cabang terlebih dahulu.');
@@ -131,6 +128,7 @@ class OrderController extends Controller{
             'payment_method_id' => 'required|exists:payment_methods,id',
             'city_id' => 'required_if:delivery_type,delivery',
             'district_id' => 'required_if:delivery_type,delivery',
+            'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         $orderProducts = [];
@@ -194,9 +192,16 @@ class OrderController extends Controller{
             }
         }
 
-        $finalTotal = ($totalAmount + $shippingCost) - $discountAmount;
         return DB::transaction(function () use ($request, $branch, $orderProducts, $appliedDiscount, $totalAmount, $shippingCost, $discountAmount) {
             $finalTotal = ($totalAmount + $shippingCost) - $discountAmount;
+
+            $paymentProofPath = null;
+            if ($request->hasFile('payment_proof')) {
+                $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+            }
+
+            // Jika ada bukti, status 'payment_check', jika tidak 'pending'
+            $statusOrder = $paymentProofPath ? 'payment_check' : 'pending';
 
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(Str::random(5)) . '-' . time(),
@@ -205,7 +210,7 @@ class OrderController extends Controller{
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
                 'customer_address' => $request->customer_address,
-                'status' => 'pending',
+                'status' => $statusOrder,
                 'order_date' => now(),
                 'subtotal' => $totalAmount, // SIMPAN HARGA ASLI
                 'discount_amount' => $discountAmount, // SIMPAN POTONGAN
@@ -213,6 +218,7 @@ class OrderController extends Controller{
                 'shipping_cost' => $shippingCost,
                 'delivery_type' => $request->delivery_type,
                 'discount_id' => $appliedDiscount ? $appliedDiscount->id : null,
+                'payment_proof' => $paymentProofPath,
             ]);
 
             foreach ($orderProducts as $id => $details) {

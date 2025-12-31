@@ -11,15 +11,15 @@
             <p class="text-muted small text-uppercase mb-0" style="letter-spacing: 0.1em;">No. Pesanan: <span class="text-black fw-bold">{{ $order->order_number }}</span></p>
         </div>
         <div class="col-md-4 text-center text-md-end mt-3 mt-md-0">
-            <span class="badge rounded-0 px-3 py-2 text-uppercase border fw-normal" 
-                  style="letter-spacing: 0.1em; font-size: 0.8rem;
-                  @if($order->status == 'completed') background-color: #000; color: #fff; border-color: #000;
-                  @elseif($order->status == 'shipping') background-color: #fff; color: #000; border-color: #000;
-                  @elseif($order->status == 'processing') background-color: #fff; color: #000; border-color: #000;
-                  @elseif($order->status == 'pending') background-color: #f8f9fa; color: #6c757d; border-color: #dee2e6;
-                  @elseif($order->status == 'cancelled') background-color: #343a40; color: #fff; border-color: #343a40;
-                  @endif">
-                {{ $statusOptions[$order->status] }}
+            <span class="badge rounded-0 fw-normal text-uppercase px-3 py-2 small border" 
+                style="letter-spacing: 0.05em; font-size: 0.7rem;
+                @if($order->status == 'completed') background-color: #000; color: #fff; border-color: #000;
+                @elseif($order->status == 'payment_check') background-color: #ffc107; color: #000; border-color: #ffc107; {{-- Warna Kuning untuk Pengecekan --}}
+                @elseif($order->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                @elseif($order->status == 'active') background-color: #fff; color: #000; border-color: #000;
+                @elseif($order->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
+                @else background-color: #fff; color: #000; border-color: #000; @endif">
+                {{ $statusOptions[$order->status] ?? $order->status }}
             </span>
         </div>
     </div>
@@ -61,10 +61,6 @@
                         <div class="d-flex justify-content-between mb-2 small text-uppercase" style="letter-spacing: 0.05em;">
                             <span class="text-muted">No. Pesanan</span>
                             <span class="text-black fw-bold">{{ $order->order_number }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-0 small text-uppercase" style="letter-spacing: 0.05em;">
-                            <span class="text-muted">Status</span>
-                            <span class="text-black">{{ $statusOptions[$order->status] }}</span>
                         </div>
                     </div>
                 </div>
@@ -144,7 +140,17 @@
                             </div>
                             <div class="d-flex justify-content-between mb-4 small text-uppercase align-items-center" style="letter-spacing: 0.05em; max-width: 400px;">
                                 <span class="text-muted">Status</span>
-                                <span class="badge rounded-0 px-2 py-1 text-uppercase border fw-normal" style="letter-spacing: 0.05em; font-size: 0.8rem; background-color: #000000; color: #ffffff; border-color: #000;">{{ $order->payment->status }}</span>
+                                <span class="badge rounded-0 fw-normal text-uppercase px-3 py-2 small border" 
+                                    style="letter-spacing: 0.05em; font-size: 0.7rem;
+                                    @if($order->status == 'completed') background-color: #000; color: #fff; border-color: #000;
+                                    @elseif($order->status == 'payment_check') background-color: #ffc107; color: #000; border-color: #ffc107;
+                                    @elseif($order->status == 'processing') background-color: #17a2b8; color: #fff; border-color: #17a2b8;
+                                    @elseif($order->status == 'shipping') background-color: #007bff; color: #fff; border-color: #007bff;
+                                    @elseif($order->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                                    @elseif($order->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
+                                    @else background-color: #fff; color: #000; border-color: #000; @endif">
+                                    {{ $statusOptions[$order->status] ?? $order->status }}
+                                </span>
                             </div>
 
                             @if($order->payment->status === 'pending' && $order->payment->paymentMethod->type !== 'transfer')
@@ -171,12 +177,26 @@
                             @endif
                         </div>
                         
-                        @if($order->payment->proof_image)
-                        <div class="col-md-5 text-center mt-4 mt-md-0 border-start ps-md-5" style="border-color: #F0F0F0 !important;">
-                            <p class="small text-muted text-uppercase mb-3" style="letter-spacing: 0.1em;">Bukti Terkirim</p>
-                            <img src="{{ asset('storage/' . $order->payment->proof_image) }}" class="img-fluid border p-1 bg-white shadow-sm" style="max-height: 250px; object-fit: contain;">
+                        <div class="col-md-5 mt-4 mt-md-0">
+                            @if($order->payment_proof)
+                                <div class="p-3 border bg-light text-center">
+                                    <p class="small text-uppercase text-muted mb-2 fw-bold" style="letter-spacing: 0.1em;">Bukti Pembayaran</p>
+                                    <img src="{{ asset('storage/' . $order->payment_proof) }}" 
+                                         alt="Bukti Transfer" 
+                                         class="img-fluid border mb-2" 
+                                         style="max-height: 300px; object-fit: contain;">
+                                    <br>
+                                    <a href="{{ asset('storage/' . $order->payment_proof) }}" target="_blank" class="btn btn-link btn-sm text-muted text-decoration-none small">
+                                        <i class="bi bi-zoom-in"></i> Lihat Ukuran Penuh
+                                    </a>
+                                </div>
+                            @else
+                                <div class="p-4 border border-dashed bg-light text-center text-muted">
+                                    <i class="bi bi-image fs-1 mb-2 d-block opacity-25"></i>
+                                    <small class="d-block">Belum ada bukti pembayaran.</small>
+                                </div>
+                            @endif
                         </div>
-                        @endif
                     </div>
                 </div>
             </div>

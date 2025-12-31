@@ -52,7 +52,7 @@
                             @endif
 
                             <div class="d-grid gap-2">
-                                <a href="{{ route('katalog.show', $product->id) }}" class="btn btn-outline-custom w-100 rounded-0 text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 0.1em; padding: 10px;">Lihat Detail</a>
+                                <a href="{{ route('katalog.show', $product->id) }}" class="btn btn-outline-custom btn-sm rounded-0 px-3 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.1em; padding: 10px;">Lihat Detail</a>
                             </div>
                         </div>
                     </div>

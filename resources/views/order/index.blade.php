@@ -32,12 +32,29 @@
                                 <td class="py-4 fw-bold text-black">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
                                 <td class="py-4">
                                     <span class="badge rounded-0 fw-normal text-uppercase px-3 py-2 small border" 
-                                          style="letter-spacing: 0.05em; font-size: 0.7rem;
-                                          @if($order->status == 'completed') background-color: #000; color: #fff; border-color: #000;
-                                          @elseif($order->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
-                                          @elseif($order->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
-                                          @else background-color: #fff; color: #000; border-color: #000; @endif">
-                                        {{ $statusOptions[$order->status] ?? $order->status }}
+                                        style="letter-spacing: 0.05em; font-size: 0.7rem;
+                                        @if($order->status == 'completed') background-color: #000; color: #fff; border-color: #000;
+                                        @elseif($order->status == 'payment_check') background-color: #ffc107; color: #000; border-color: #ffc107;
+                                        @elseif($order->status == 'processing') background-color: #17a2b8; color: #fff; border-color: #17a2b8;
+                                        @elseif($order->status == 'shipping') background-color: #007bff; color: #fff; border-color: #007bff;
+                                        @elseif($order->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                                        @elseif($order->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
+                                        @else background-color: #fff; color: #000; border-color: #000; @endif">
+                                        @if($order->status == 'payment_check')
+                                            Pengecekan Pembayaran
+                                        @elseif($order->status == 'pending')
+                                            Menunggu Pembayaran
+                                        @elseif($order->status == 'processing')
+                                            Diproses
+                                        @elseif($order->status == 'shipping')
+                                            Dikirim
+                                        @elseif($order->status == 'completed')
+                                            Selesai
+                                        @elseif($order->status == 'cancelled')
+                                            Dibatalkan
+                                        @else
+                                            {{ $order->status }}
+                                        @endif
                                     </span>
                                 </td>
                                 <td class="pe-4 py-4 text-end">

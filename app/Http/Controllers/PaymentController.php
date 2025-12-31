@@ -12,28 +12,6 @@ use Illuminate\Support\Facades\Storage;
 use App\Services\MidtransService;
 
 class PaymentController extends Controller{
-    public function orderPaymentForm($orderId){
-        $order = Order::where('user_id', Auth::id())->findOrFail($orderId);
-        $paymentMethods = PaymentMethod::where('is_active', true)->get();
-        
-        return view('payment.order', [
-            'title' => 'Pembayaran Pesanan',
-            'order' => $order,
-            'paymentMethods' => $paymentMethods,
-        ]);
-    }
-
-    public function rentPaymentForm($rentId){
-        $rent = Rent::where('user_id', Auth::id())->findOrFail($rentId);
-        $paymentMethods = PaymentMethod::where('is_active', true)->get();
-        
-        return view('payment.rent', [
-            'title' => 'Pembayaran Sewa',
-            'rent' => $rent,
-            'paymentMethods' => $paymentMethods,
-        ]);
-    }
-
     public function processOrderPayment(Request $request, $orderId){
         return $this->processPayment($request, 'order', $orderId);
     }
@@ -74,6 +52,18 @@ class PaymentController extends Controller{
             $proofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
             $paymentData['proof_image'] = $proofPath;
             $paymentData['status'] = 'processing'; // Menandakan sedang dicek admin
+
+            if ($type === 'rent') {
+                $payable->update([
+                    'status' => 'payment_check', // Ubah status SEWA jadi 'payment_check'
+                    'payment_proof' => $proofPath // Update juga kolom bukti di tabel Rent agar sinkron
+                ]);
+            } elseif ($type === 'order') {
+                $payable->update([
+                    'status' => 'payment_check', // Sesuaikan jika order punya status serupa
+                    'payment_proof' => $proofPath // Update juga kolom bukti di tabel Order agar sinkron
+                ]);
+            }
         }
 
         // Simpan atau Update (Polymorphic creation)

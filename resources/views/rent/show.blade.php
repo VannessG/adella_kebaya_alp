@@ -11,16 +11,15 @@
             <p class="text-muted small text-uppercase mb-0" style="letter-spacing: 0.1em;">No. Sewa: <span class="text-black fw-bold">{{ $rent->rent_number }}</span></p>
         </div>
         <div class="col-md-4 text-center text-md-end mt-3 mt-md-0">
-            <span class="badge rounded-0 px-3 py-2 text-uppercase border fw-normal" 
-                  style="letter-spacing: 0.1em; font-size: 0.8rem;
-                  @if($rent->status == 'returned') background-color: #000; color: #fff; border-color: #000;
-                  @elseif($rent->status == 'active') background-color: #fff; color: #000; border-color: #000;
-                  @elseif($rent->status == 'paid') background-color: #000; color: #fff; border-color: #000;
-                  @elseif($rent->status == 'pending') background-color: #f8f9fa; color: #6c757d; border-color: #dee2e6;
-                  @elseif($rent->status == 'overdue') background-color: #fff; color: #dc3545; border-color: #dc3545;
-                  @elseif($rent->status == 'cancelled') background-color: #343a40; color: #fff; border-color: #343a40;
-                  @endif">
-                {{ $statusOptions[$rent->status] }}
+            <span class="badge rounded-0 fw-normal text-uppercase px-3 py-2 small border" 
+                style="letter-spacing: 0.05em; font-size: 0.7rem;
+                @if($rent->status == 'completed') background-color: #000; color: #fff; border-color: #000;
+                @elseif($rent->status == 'payment_check') background-color: #ffc107; color: #000; border-color: #ffc107; {{-- Warna Kuning untuk Pengecekan --}}
+                @elseif($rent->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                @elseif($rent->status == 'active') background-color: #fff; color: #000; border-color: #000;
+                @elseif($rent->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
+                @else background-color: #fff; color: #000; border-color: #000; @endif">
+                {{ $statusOptions[$rent->status] ?? $rent->status }}
             </span>
         </div>
     </div>
@@ -31,6 +30,24 @@
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="card h-100 border rounded-0 bg-white p-4" style="border-color: var(--border-color);">
+                        <h5 class="fw-normal text-uppercase text-black mb-4 border-bottom border-black pb-2" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em; font-size: 1rem;">Informasi Pelanggan</h5>
+                        <div class="d-flex justify-content-between mb-2 small text-uppercase" style="letter-spacing: 0.05em;">
+                            <span class="text-muted">Nama</span>
+                            <span class="text-black fw-bold">{{ $rent->customer_name }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small text-uppercase" style="letter-spacing: 0.05em;">
+                            <span class="text-muted">Telepon</span>
+                            <span class="text-black">{{ $rent->customer_phone }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-0 small text-uppercase" style="letter-spacing: 0.05em;">
+                            <span class="text-muted">Alamat</span>
+                            <span class="text-black text-end" style="max-width: 60%;">{{ $rent->customer_address }}</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="col-md-6">
                     <div class="card h-100 border rounded-0 bg-white p-4" style="border-color: var(--border-color);">
                         <h5 class="fw-normal text-uppercase text-black mb-4 border-bottom border-black pb-2" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em; font-size: 1rem;">Informasi Penyewaan</h5>
@@ -53,24 +70,6 @@
                         <div class="d-flex justify-content-between mb-0 small text-uppercase" style="letter-spacing: 0.05em;">
                             <span class="text-muted">Metode</span>
                             <span class="text-black">{{ $rent->delivery_type == 'pickup' ? 'Ambil di Tempat' : 'Antar ke Alamat' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card h-100 border rounded-0 bg-white p-4" style="border-color: var(--border-color);">
-                        <h5 class="fw-normal text-uppercase text-black mb-4 border-bottom border-black pb-2" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em; font-size: 1rem;">Informasi Pelanggan</h5>
-                        <div class="d-flex justify-content-between mb-2 small text-uppercase" style="letter-spacing: 0.05em;">
-                            <span class="text-muted">Nama</span>
-                            <span class="text-black fw-bold">{{ $rent->customer_name }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 small text-uppercase" style="letter-spacing: 0.05em;">
-                            <span class="text-muted">Telepon</span>
-                            <span class="text-black">{{ $rent->customer_phone }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-0 small text-uppercase" style="letter-spacing: 0.05em;">
-                            <span class="text-muted">Alamat</span>
-                            <span class="text-black text-end" style="max-width: 60%;">{{ $rent->customer_address }}</span>
                         </div>
                     </div>
                 </div>
@@ -149,7 +148,8 @@
                     <h5 class="card-title mb-0 fw-normal text-uppercase text-black" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em; font-size: 1rem;">Informasi Pembayaran</h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row align-items-center">
+                    <div class="row">
+                        {{-- Kolom Kiri: Detail Pembayaran --}}
                         <div class="col-md-7">
                             <div class="d-flex justify-content-between mb-2 small text-uppercase" style="letter-spacing: 0.05em; max-width: 400px;">
                                 <span class="text-muted">Metode</span>
@@ -157,9 +157,19 @@
                             </div>
                             <div class="d-flex justify-content-between mb-4 small text-uppercase align-items-center" style="letter-spacing: 0.05em; max-width: 400px;">
                                 <span class="text-muted">Status</span>
-                                <span class="badge rounded-0 px-3 py-1 text-uppercase border fw-normal" style="letter-spacing: 0.05em; font-size: 0.8rem; background-color: #000000; color: #ffffff; border-color: #000;">{{ $rent->payment->status }}</span>
+                                <span class="badge rounded-0 fw-normal text-uppercase px-3 py-2 small border" 
+                                        style="letter-spacing: 0.05em; font-size: 0.7rem;
+                                        @if($rent->status == 'completed') background-color: #000; color: #fff; border-color: #000;
+                                        @elseif($rent->status == 'payment_check') background-color: #ffc107; color: #000; border-color: #ffc107; {{-- Warna Kuning untuk Pengecekan --}}
+                                        @elseif($rent->status == 'pending') background-color: #fff; color: #555; border-color: #ccc;
+                                        @elseif($rent->status == 'active') background-color: #fff; color: #000; border-color: #000;
+                                        @elseif($rent->status == 'cancelled') background-color: #fff; color: #d9534f; border-color: #d9534f;
+                                        @else background-color: #fff; color: #000; border-color: #000; @endif">
+                                        {{ $statusOptions[$rent->status] ?? $rent->status }}
+                                    </span>
                             </div>
 
+                            {{-- Tombol Bayar (Jika Pending & Bukan Transfer Manual) --}}
                             @if($rent->payment->status === 'pending' && $rent->payment->paymentMethod->type !== 'transfer')
                                 <div class="alert rounded-0 bg-subtle border border-black text-black small mb-3 p-3">
                                     <i class="bi bi-info-circle me-2"></i> Selesaikan pembayaran untuk memproses penyewaan.
@@ -169,27 +179,54 @@
                                 </a>
                             @endif
 
+                            {{-- Form Upload Ulang (Jika Gagal/Pending Transfer) --}}
                             @if($rent->payment->paymentMethod->type === 'transfer' && ($rent->payment->status === 'pending' || $rent->payment->status === 'failed'))
-                                <form action="{{ route('payment.rent.process', $rent->id) }}" method="POST" enctype="multipart/form-data" class="mt-3 p-4 bg-subtle border" style="border-color: #eee;">
-                                    @csrf
-                                    <input type="hidden" name="payment_method_id" value="{{ $rent->payment->payment_method_id }}">
-                                    <div class="mb-3">
-                                        <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Upload Bukti Transfer Baru</label>
-                                        <input type="file" name="payment_proof" class="form-control rounded-0 border-0 bg-white" required style="font-size: 0.8rem;">
+                                @if(!$rent->payment_proof) 
+                                    {{-- Hanya tampilkan tombol upload jika BELUM ada bukti --}}
+                                    <form action="{{ route('payment.rent.process', $rent->id) }}" method="POST" enctype="multipart/form-data" class="mt-3 p-4 bg-subtle border" style="border-color: #eee;">
+                                        @csrf
+                                        <input type="hidden" name="payment_method_id" value="{{ $rent->payment->payment_method_id }}">
+                                        <div class="mb-3">
+                                            <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Upload Bukti Transfer</label>
+                                            <input type="file" name="payment_proof" class="form-control rounded-0 border-0 bg-white" required style="font-size: 0.8rem;">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-custom rounded-0 w-100 py-3 text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.1em;">
+                                            <i class="bi bi-upload me-2"></i> Kirim Bukti
+                                        </button>
+                                    </form>
+                                @else
+                                    <div class="alert alert-success rounded-0 border-0 small mt-3">
+                                        <i class="bi bi-check-circle-fill me-2"></i> Bukti transfer sudah dikirim dan sedang menunggu verifikasi admin.
                                     </div>
-                                    <button type="submit" class="btn btn-primary-custom rounded-0 w-100 py-3 text-uppercase fw-bold" style="font-size: 0.8rem; letter-spacing: 0.1em;">
-                                        <i class="bi bi-upload me-2"></i> Kirim Bukti
-                                    </button>
-                                </form>
+                                @endif
                             @endif
                         </div>
 
-                        @if($rent->payment->proof_image)
-                        <div class="col-md-5 text-center mt-4 mt-md-0 border-start ps-md-5" style="border-color: #F0F0F0 !important;">
-                            <p class="small text-muted text-uppercase mb-3" style="letter-spacing: 0.1em;">Bukti Terkirim</p>
-                            <img src="{{ asset('storage/' . $rent->payment->proof_image) }}" class="img-fluid border p-1 bg-white shadow-sm" style="max-height: 250px; object-fit: contain;">
+{{-- Kolom Kanan: Tampilkan Gambar Bukti (DIPERBAIKI) --}}
+                        <div class="col-md-5 mt-4 mt-md-0">
+                            @if($rent->payment_proof)
+                                <div class="p-3 border bg-light text-center">
+                                    <p class="small text-uppercase text-muted mb-2 fw-bold" style="letter-spacing: 0.1em;">Bukti Pembayaran</p>
+                                    
+                                    {{-- Tampilkan Gambar dengan Helper asset() --}}
+                                    <img src="{{ asset('storage/' . $rent->payment_proof) }}" 
+                                         alt="Bukti Transfer" 
+                                         class="img-fluid border mb-2" 
+                                         style="max-height: 300px; object-fit: contain;">
+                                    
+                                    <br>
+                                    <a href="{{ asset('storage/' . $rent->payment_proof) }}" target="_blank" class="btn btn-link btn-sm text-muted text-decoration-none small">
+                                        <i class="bi bi-zoom-in"></i> Lihat Ukuran Penuh
+                                    </a>
+                                </div>
+                            @else
+                                {{-- Jika belum ada bukti --}}
+                                <div class="p-4 border border-dashed bg-light text-center text-muted">
+                                    <i class="bi bi-image fs-1 mb-2 d-block opacity-25"></i>
+                                    <small class="d-block">Belum ada bukti pembayaran.</small>
+                                </div>
+                            @endif
                         </div>
-                        @endif
                     </div>
                 </div>
             </div>

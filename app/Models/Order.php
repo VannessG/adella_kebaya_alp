@@ -23,7 +23,8 @@ class Order extends Model{
         'discount_amount',
         'total_amount', 
         'shipping_cost', 
-        'delivery_type'
+        'delivery_type',
+        'payment_proof'
     ];
 
     protected $casts = [

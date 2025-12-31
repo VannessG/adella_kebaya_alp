@@ -16,7 +16,6 @@
                 <ul class="list-unstyled d-flex flex-column gap-3 small">
                     <li><a href="{{ url('/') }}" class="text-decoration-none text-white opacity-75 hover-opacity-100 transition-all text-uppercase" style="letter-spacing: 0.05em;">Beranda</a></li>
                     <li><a href="{{ url('/katalog') }}" class="text-decoration-none text-white opacity-75 hover-opacity-100 transition-all text-uppercase" style="letter-spacing: 0.05em;">Koleksi</a></li>
-                    <li><a href="{{ url('/about') }}" class="text-decoration-none text-white opacity-75 hover-opacity-100 transition-all text-uppercase" style="letter-spacing: 0.05em;">Tentang Kami</a></li>
                 </ul>
             </div>
 
