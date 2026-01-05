@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('customer_phone');
             $table->text('customer_address');
             $table->enum('status', ['pending', 'payment_check', 'processing', 'shipping', 'completed', 'cancelled'])->default('pending');
-            $table->string('payment_proof')->nullable();
             $table->date('order_date');
             $table->decimal('subtotal', 15, 2)->default(0); 
             $table->decimal('discount_amount', 15, 2)->default(0);

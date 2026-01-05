@@ -16,7 +16,6 @@ return new class extends Migration
             $table->dateTime('end_date');
             $table->integer('total_days');
             $table->enum('status', ['pending', 'payment_check', 'confirmed', 'active', 'returned', 'completed', 'cancelled', 'overdue'])->default('pending');
-            $table->string('payment_proof')->nullable();
             $table->decimal('subtotal', 15, 2)->default(0); // Harga asli produk x hari
             $table->decimal('discount_amount', 15, 2)->default(0); // Nominal potongan
             $table->decimal('shipping_cost', 15, 2)->default(0); // Ongkir

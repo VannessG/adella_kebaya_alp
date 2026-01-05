@@ -9,8 +9,16 @@ use Illuminate\Http\Request;
 
 class ShiftController extends Controller{
     public function index(Request $request){
-        // 1. Query Dasar dengan Filter Tanggal (jika ada)
+        // 1. Query Dasar
         $query = Shift::with('branch')->latest('shift_day');
+
+        // --- TAMBAHAN FILTER CABANG ---
+        if (session()->has('selected_branch')) {
+            $query->where('branch_id', session('selected_branch')->id);
+        } elseif (session()->has('branch_id')) {
+            $query->where('branch_id', session('branch_id'));
+        }
+        // -----------------------------
 
         if ($request->has('start_date') && $request->start_date) {
             $query->whereDate('shift_day', '>=', $request->start_date);
@@ -20,26 +28,22 @@ class ShiftController extends Controller{
             $query->whereDate('shift_day', '<=', $request->end_date);
         }
 
-        // 2. Ambil data (gunakan get() atau paginate() sesuai kebutuhan)
-        // Di sini saya gunakan get() agar logika transform lebih mudah, tapi paginate() juga bisa dengan cara khusus
         $shifts = $query->get(); 
-        // 3. Transform Data untuk View (Pindahkan Logika PHP View ke sini)
+        
         $shifts->transform(function ($shift) {
-            // Logika Format Tanggal
+            // ... (logika transform Anda tetap sama) ...
             $shift->view_date = $shift->shift_day->format('d/m/Y');
-            // Logika Format Jam Kerja
             $start = substr($shift->start_time, 0, 5);
             $end = substr($shift->end_time, 0, 5);
             $shift->view_time = "$start - $end";
-            // Logika Hitung Absensi
             $attendanceData = $shift->attendance_data ?? [];
             $shift->view_total_staff = count($attendanceData);
-            // Hitung jumlah yang hadir
             $shift->view_present_count = collect($attendanceData)
                 ->filter(fn($val) => $val === 'hadir')
                 ->count();
             return $shift;
         });
+
         return view('admin.shifts.index', [
             'title' => 'Rekap Shift',
             'shifts' => $shifts

@@ -1,58 +1,33 @@
 @extends('layouts.app')
-
 @section('title', 'Beranda')
-
 @section('content')
-<div class="card border-0 overflow-hidden mb-5 rounded-0 position-relative shadow-sm">
-    <div style="background: linear-gradient(135deg, #F5F5F5 0%, #FFFFFF 100%); height: 370px; width: 100%;"></div>
-    
-    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center p-5">
-        <h1 class="display-3 fw-normal mb-3 font-serif text-uppercase text-black" style="letter-spacing: 0.15em;">Selamat Datang</h1>
-        <p class="lead mb-5 fw-light text-muted" style="max-width: 600px; font-size: 1rem; letter-spacing: 0.05em;">
-            Koleksi kebaya eksklusif untuk momen terindah Anda. <br>
-            Butik {{ session('selected_branch')->city ?? 'Online' }}
-        </p>
-        <div class="d-flex gap-3">
-            <a href="{{ url('/katalog') }}" class="btn btn-primary-custom px-5 py-3">LIHAT KOLEKSI</a>
+
+<div class="card border-0 rounded-0 mb-5 position-relative overflow-hidden">
+    <div style="background: linear-gradient(135deg, #f5f5f5 0%, #fff 100%); min-height: 300px;" class="d-flex align-items-center justify-content-center">
+        <div class="text-center p-4" style="max-width: 600px; z-index: 1;">
+            <h1 class="display-4 font-serif text-uppercase mb-3">Selamat Datang</h1>
+            <p class="text-muted mb-4 small">Temukan keanggunan dalam setiap jahitan. Koleksi kebaya terbaik untuk momen spesial Anda.</p>
+            <a href="{{ url('/katalog') }}" class="btn btn-primary-custom px-5 py-3 fw-bold">LIHAT KOLEKSI</a>
         </div>
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3" style="border-color: #E5E5E5 !important;">
-    <div>
-        <h2 class="fw-normal mb-1 font-serif text-uppercase text-black" style="letter-spacing: 0.1em;">Koleksi Terbaru</h2>
-        <p class="text-muted mb-0 small text-uppercase" style="letter-spacing: 0.05em;">Kurasi pilihan minggu ini</p>
-    </div>
-    <a href="{{ url('/katalog') }}" class="text-link-custom small text-uppercase fw-bold" style="letter-spacing: 0.1em; font-size: 0.75rem;">
-        Lihat Semua
-    </a>
+<div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-2">
+    <h2 class="h4 font-serif text-uppercase mb-0">Terbaru</h2>
+    <a href="{{ url('/katalog') }}" class="text-decoration-none text-black small fw-bold">LIHAT SEMUA</a>
 </div>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+<div class="row row-cols-2 row-cols-md-4 g-3">
     @foreach ($featuredProducts as $product)
         <div class="col">
-            <div class="card h-100 border rounded-0 position-relative product-card bg-white" style="border-color: #F0F0F0;">
-                @if($product->is_discounted)
-                    <span class="position-absolute top-0 start-0 badge bg-black text-white m-3 rounded-0 shadow-sm" style="font-weight: 500; letter-spacing: 0.1em; padding: 0.5em 1em;">PROMO</span>
-                @endif
-                
-                <div class="ratio ratio-1x1 bg-subtle overflow-hidden">
-                    <img src="{{ $product->image_url }}" class="card-img-top object-fit-cover" alt="{{ $product->name }}" style="height: 280px;">
+            <div class="card h-100 border rounded-0 product-card">
+                <div class="ratio ratio-1x1 bg-light">
+                    <img src="{{ $product->image_url }}" class="card-img-top object-fit-cover" alt="{{ $product->name }}">
                 </div>
-                
-                <div class="card-body d-flex flex-column p-4 text-center">
-                    <small class="text-muted mb-2 text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.15em;">{{ $product->category->name ?? 'Kebaya' }}</small>
-                    <h5 class="card-title fw-normal font-serif text-truncate mb-3 text-black" style="font-size: 1rem; letter-spacing: 0.05em;">{{ $product->name }}</h5>
-                    
-                    <div class="mt-auto">
-                        @if($product->is_discounted)
-                            <div class="text-decoration-line-through text-muted small mb-1">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
-                            <div class="fw-bold text-black">Rp {{ number_format($product->discounted_price, 0, ',', '.') }}</div>
-                        @else
-                            <div class="fw-bold text-black">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
-                        @endif
-                        <a href="{{ url('/katalog/detail/' . $product->id) }}" class="btn btn-outline-custom btn-sm rounded-0 px-3 text-uppercase mt-3" style="font-size: 0.7rem; letter-spacing: 0.1em; padding: 10px;">Lihat Detail</a>
-                    </div>
+                <div class="card-body p-2 text-center">
+                    <h5 class="card-title fs-6 font-serif text-truncate">{{ $product->name }}</h5>
+                    <div class="fw-bold small">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
+                    <div class="d-grid mt-2"><a href="{{ route('katalog.show', $product->id) }}" class="btn btn-outline-custom w-100 rounded-0 py-1" style="font-size: 0.7rem;">DETAIL</a></div>
                 </div>
             </div>
         </div>

@@ -23,8 +23,7 @@ class Order extends Model{
         'discount_amount',
         'total_amount', 
         'shipping_cost', 
-        'delivery_type',
-        'payment_proof'
+        'delivery_type'
     ];
 
     protected $casts = [
@@ -87,6 +86,37 @@ class Order extends Model{
             'completed' => 'Selesai',
             'cancelled' => 'Dibatalkan',
         ];
+    }
+
+    public function getStatusStyleAttribute(){
+        $style = [
+            'bg' => '#fff',
+            'color' => '#000',
+            'border' => '1px solid #000',
+            'label' => strtoupper($this->status)
+        ];
+
+        switch ($this->status) {
+            case 'payment_check':
+                $style = ['bg' => '#ffc107', 'color' => '#000', 'border' => 'none', 'label' => 'PENGECEKAN'];
+                break;
+            case 'pending':
+                $style = ['bg' => '#fff', 'color' => '#666', 'border' => '1px solid #ccc', 'label' => 'BELUM BAYAR'];
+                break;
+            case 'processing':
+                $style = ['bg' => '#17a2b8', 'color' => '#fff', 'border' => 'none', 'label' => 'DIPROSES'];
+                break;
+            case 'shipping':
+                $style = ['bg' => '#007bff', 'color' => '#fff', 'border' => 'none', 'label' => 'DIKIRIM'];
+                break;
+            case 'completed':
+                $style = ['bg' => '#000', 'color' => '#fff', 'border' => 'none', 'label' => 'SELESAI'];
+                break;
+            case 'cancelled':
+                $style = ['bg' => '#fff', 'color' => '#dc3545', 'border' => '1px solid #dc3545', 'label' => 'DIBATALKAN'];
+                break;
+        }
+        return $style;
     }
 
     public static function dataWithOrderNumber($orderNumber){

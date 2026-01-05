@@ -86,7 +86,6 @@ class RentController extends Controller{
             'discount_id' => 'nullable|exists:discounts,id',
             'district_id' => 'required_if:delivery_type,delivery',
             'shipping_cost' => 'nullable|numeric',
-            'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -94,11 +93,6 @@ class RentController extends Controller{
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
             $totalDays = max(1, $startDate->diffInDays($endDate));
-
-            $paymentProofPath = null;
-            if ($request->hasFile('payment_proof')) {
-                $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-            }
 
             $totalProdukHari = 0; 
             $rentProducts = [];
@@ -128,8 +122,6 @@ class RentController extends Controller{
             $shippingCost = ($request->delivery_type === 'delivery') ? (int)$request->shipping_cost : 0;
             $finalTotal = ($totalProdukHari - $discountAmount) + $shippingCost;
 
-            $statusSewa = $paymentProofPath ? 'payment_check' : 'pending';
-
             $rent = Rent::create([
                 'rent_number' => 'RENT-' . strtoupper(Str::random(5)) . '-' . time(),
                 'user_id' => Auth::id(), 
@@ -137,7 +129,7 @@ class RentController extends Controller{
                 'start_date' => $startDate, 
                 'end_date' => $endDate, 
                 'total_days' => $totalDays,
-                'status' => $statusSewa,
+                'status' => 'pending', 
                 'subtotal' => $totalProdukHari, // HARUS DIISI
                 'discount_amount' => $discountAmount, // HARUS DIISI
                 'total_amount' => $finalTotal,
@@ -146,7 +138,6 @@ class RentController extends Controller{
                 'customer_address' => $request->customer_address, 
                 'customer_name' => $request->customer_name, 
                 'customer_phone' => $request->customer_phone,
-                'payment_proof' => $paymentProofPath,
             ]);
             $rent->products()->sync($rentProducts);
 
@@ -196,8 +187,20 @@ class RentController extends Controller{
     }
 
     public function adminIndex() {
-        $rents = Rent::with(['user', 'branch'])->latest()->paginate(10);
-        return view('admin.rents.index', ['rents' => $rents, 'statusOptions' => Rent::getStatusOptions()]);
+        $query = Rent::with(['user', 'branch'])->latest();
+
+        if (session()->has('selected_branch')) {
+            $query->where('branch_id', session('selected_branch')->id);
+        } elseif (session()->has('branch_id')) {
+            $query->where('branch_id', session('branch_id'));
+        }
+
+        $rents = $query->paginate(10);
+        
+        return view('admin.rents.index', [
+            'rents' => $rents, 
+            'statusOptions' => Rent::getStatusOptions()
+        ]);
     }
 
     public function showAdmin(Rent $rent) {

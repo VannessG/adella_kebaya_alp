@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Services\RajaOngkirService;
 use App\Services\MidtransService;
+use Carbon\Carbon;
 
 class OrderController extends Controller{
     protected $rajaOngkirService;
@@ -115,6 +116,9 @@ class OrderController extends Controller{
 
     public function checkout(Request $request){
         $branch = session('selected_branch');
+        Log::info("=== DIAGNOSA DATA MASUK ===");
+        Log::info("Input direct_products: " . json_encode($request->direct_products));
+        Log::info("Session cart: " . json_encode(session()->get('cart')));
 
         if (!$branch) {
             return redirect()->route('select.branch')->with('error', 'Silakan pilih cabang terlebih dahulu.');
@@ -128,7 +132,6 @@ class OrderController extends Controller{
             'payment_method_id' => 'required|exists:payment_methods,id',
             'city_id' => 'required_if:delivery_type,delivery',
             'district_id' => 'required_if:delivery_type,delivery',
-            'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         $orderProducts = [];
@@ -192,16 +195,9 @@ class OrderController extends Controller{
             }
         }
 
+        $finalTotal = ($totalAmount + $shippingCost) - $discountAmount;
         return DB::transaction(function () use ($request, $branch, $orderProducts, $appliedDiscount, $totalAmount, $shippingCost, $discountAmount) {
             $finalTotal = ($totalAmount + $shippingCost) - $discountAmount;
-
-            $paymentProofPath = null;
-            if ($request->hasFile('payment_proof')) {
-                $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-            }
-
-            // Jika ada bukti, status 'payment_check', jika tidak 'pending'
-            $statusOrder = $paymentProofPath ? 'payment_check' : 'pending';
 
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(Str::random(5)) . '-' . time(),
@@ -210,7 +206,7 @@ class OrderController extends Controller{
                 'customer_name' => $request->customer_name,
                 'customer_phone' => $request->customer_phone,
                 'customer_address' => $request->customer_address,
-                'status' => $statusOrder,
+                'status' => 'pending',
                 'order_date' => now(),
                 'subtotal' => $totalAmount, // SIMPAN HARGA ASLI
                 'discount_amount' => $discountAmount, // SIMPAN POTONGAN
@@ -218,7 +214,6 @@ class OrderController extends Controller{
                 'shipping_cost' => $shippingCost,
                 'delivery_type' => $request->delivery_type,
                 'discount_id' => $appliedDiscount ? $appliedDiscount->id : null,
-                'payment_proof' => $paymentProofPath,
             ]);
 
             foreach ($orderProducts as $id => $details) {
@@ -359,8 +354,16 @@ class OrderController extends Controller{
         ]);
     }
 
-    public function adminIndex(){
-        $orders = Order::with('user')->latest()->paginate(10);
+    public function adminIndex() {
+        $query = Order::with('user')->latest();
+
+        if (session()->has('selected_branch')) {
+            $query->where('branch_id', session('selected_branch')->id);
+        } elseif (session()->has('branch_id')) {
+            $query->where('branch_id', session('branch_id'));
+        }
+
+        $orders = $query->paginate(10);
         $statusOptions = Order::getStatusOptions();
         return view('admin.orders.index', compact('orders', 'statusOptions'));
     }

@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="container pb-4">
-    <h1 class="display-5 fw-normal text-uppercase text-black mb-2 text-center text-md-start" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Form Penyewaan</h1>
+    <h1 class="display-5 fw-normal text-uppercase text-black mb-2 text-center text-md-start font-serif h3">Form Penyewaan</h1>
     <div class="d-none d-md-block" style="width: 60px; height: 1px; background-color: #000; margin-top: 15px;"></div>
 </div>
 
@@ -20,38 +20,36 @@
         @endif
 
         <div class="row g-5">
-            <div class="col-lg-8">
-                <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
-                    <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
-                        <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Detail Sewa</h5>
-                    </div>
-                    <div class="card-body p-4">
+            <div class="col-12 col-lg-8">
+                <div class="card border rounded-0 mb-4 bg-white shadow-sm">
+                    <div class="card-header bg-white border-bottom p-3 p-md-4"><h5 class="fw-normal text-uppercase text-black mb-0 font-serif h6">Detail Sewa</h5></div>
+                    <div class="card-body p-3 p-md-4">
                         @if($product)
-                            <div class="d-flex align-items-center mb-4 pb-4 border-bottom" style="border-color: #eee !important;">
-                                <div class="border p-1 me-3">
-                                    <img src="{{ $product->image_url }}" class="d-block" style="width: 60px; height: 60px; object-fit: cover;">
+                            <div class="d-flex align-items-center mb-4 pb-4 border-bottom">
+                                <div class="border p-1 me-3 bg-white">
+                                    <img src="{{ $product->image_url }}" class="d-block object-fit-cover" style="width: 60px; height: 60px;">
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold text-uppercase text-black mb-1 small" style="letter-spacing: 0.05em;">{{ $product->name }}</h6>
+                                    <h6 class="fw-bold text-uppercase text-black mb-1 small">{{ $product->name }}</h6>
                                     <p class="text-muted small mb-0">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
                                 </div>
                             </div>
                         @endif
 
-                        <div class="row g-4">
-                            <div class="col-md-6">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Tanggal Mulai</label>
                                 <input type="date" name="start_date" id="start_date" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Tanggal Selesai</label>
                                 <input type="date" name="end_date" id="end_date" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ date('Y-m-d', strtotime('+3 days')) }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Nama Penerima</label>
                                 <input type="text" name="customer_name" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ auth()->user()->name }}" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">No. WhatsApp</label>
                                 <input type="text" name="customer_phone" class="form-control rounded-0 bg-subtle border-0 p-3" value="{{ auth()->user()->phone }}" required>
                             </div>
@@ -59,26 +57,26 @@
                     </div>
                 </div>
 
-                <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
-                    <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
-                        <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Metode Pengiriman</h5>
+                <div class="card border rounded-0 mb-4 bg-white shadow-sm">
+                    <div class="card-header bg-white border-bottom p-3 p-md-4">
+                        <h5 class="fw-normal text-uppercase text-black mb-0 font-serif h6">Metode Pengiriman</h5>
                     </div>
-                    <div class="card-body p-4">
-                        <div class="btn-group w-100 border border-black rounded-0" role="group">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="btn-group w-100 rounded-0 mb-3 gap-2" role="group" style="border: none;">
                             <input type="radio" class="btn-check delivery-type" name="delivery_type" id="pickup" value="pickup" checked>
-                            <label class="btn btn-outline-custom rounded-0 py-3 text-uppercase fw-bold" for="pickup" style="font-size: 0.8rem; letter-spacing: 0.1em;">
-                                <i class="bi bi-shop d-block fs-4 mb-2"></i> Ambil di Toko
+                            <label class="btn btn-shipping-method rounded-0 py-3 text-uppercase fw-bold flex-fill" for="pickup" style="font-size: 0.75rem; letter-spacing: 0.1em;">
+                                <i class="bi bi-shop d-block fs-3 mb-2"></i> Ambil di Toko
                             </label>
                         
                             <input type="radio" class="btn-check delivery-type" name="delivery_type" id="delivery" value="delivery"> 
-                            <label class="btn btn-outline-custom rounded-0 py-3 text-uppercase fw-bold" for="delivery" style="font-size: 0.8rem; letter-spacing: 0.1em;">
-                                <i class="bi bi-box-seam d-block fs-4 mb-2"></i> Ekspedisi
+                            <label class="btn btn-shipping-method rounded-0 py-3 text-uppercase fw-bold flex-fill" for="delivery" style="font-size: 0.75rem; letter-spacing: 0.1em;">
+                                <i class="bi bi-box-seam d-block fs-3 mb-2"></i> Ekspedisi
                             </label>
                         </div>
 
-                        <div id="delivery-section" class="mt-4 pt-4 border-top" style="display:none; border-color: #eee !important;">
-                            <div class="row g-4">
-                                <div class="col-md-6">
+                        <div id="delivery-section" class="mt-4 pt-3 border-top" style="display:none; border-color: #eee !important;">
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Provinsi</label>
                                     <select id="province_id" class="form-select rounded-0 bg-subtle border-0 p-3">
                                         <option value="">-- Pilih Provinsi --</option>
@@ -87,19 +85,19 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kota/Kabupaten</label>
                                     <select id="city_id" name="city_id" class="form-select rounded-0 bg-subtle border-0 p-3" disabled>
-                                        <option value="">-- Pilih Provinsi Dulu --</option>
+                                        <option value="">-- Pilih Provinsi Dahulu --</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kecamatan</label>
                                     <select name="district_id" id="district_id" class="form-select rounded-0 bg-subtle border-0 p-3" disabled>
-                                        <option value="">-- Pilih Kota Dulu --</option>
+                                        <option value="">-- Pilih Kota Dahulu --</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Kurir</label>
                                     <select name="courier_code" id="courier_code" class="form-select rounded-0 bg-subtle border-0 p-3">
                                         <option value="lion">Lion Parcel</option>
@@ -108,10 +106,10 @@
                                         <option value="tiki">TIKI</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Layanan</label>
                                     <select name="courier_service" id="courier_service" class="form-select rounded-0 bg-subtle border-0 p-3">
-                                        <option value="">Pilih Layanan...</option>
+                                        <option value="">Pilih Layanan</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
@@ -123,23 +121,14 @@
                     </div>
                 </div>
         
-{{-- 3. METODE PEMBAYARAN --}}
-                <div class="card border rounded-0 mb-5 bg-white" style="border-color: var(--border-color);">
-                    <div class="card-header bg-white border-bottom p-4" style="border-color: var(--border-color) !important;">
-                        <h5 class="fw-normal text-uppercase text-black mb-0" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Metode Pembayaran</h5>
+                <div class="card border rounded-0 mb-4 bg-white shadow-sm">
+                    <div class="card-header bg-white border-bottom p-3 p-md-4">
+                        <h5 class="fw-normal text-uppercase text-black mb-0 font-serif h6">Metode Pembayaran</h5>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="card-body p-3 p-md-4">
                         @foreach($paymentMethods as $method)
-                        <div class="form-check mb-3 p-3 border rounded-0 cursor-pointer hover-bg-subtle" style="border-color: #eee;">
-                            {{-- Tambahkan data-name untuk mendeteksi nama metode di JS --}}
-                            <input class="form-check-input mt-1 payment-method-radio" 
-                                   type="radio" 
-                                   name="payment_method_id" 
-                                   id="pay{{$method->id}}" 
-                                   value="{{$method->id}}" 
-                                   data-name="{{ strtolower($method->name) }}"
-                                   required 
-                                   style="border-color: #000;">
+                        <div class="form-check mb-2 p-3 border rounded-0 cursor-pointer hover-bg-subtle" style="border-color: #eee;">
+                            <input class="form-check-input mt-1 payment-method-radio" type="radio" name="payment_method_id" id="pay{{$method->id}}" value="{{$method->id}}" data-name="{{ strtolower($method->name) }}"required style="border-color: #000;">
                             <label class="form-check-label ms-2 w-100 cursor-pointer" for="pay{{$method->id}}">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="fw-bold text-uppercase small text-black" style="letter-spacing: 0.05em;">{{ $method->name }}</span>
@@ -150,39 +139,30 @@
                             </label>
                         </div>
                         @endforeach
-
-                        {{-- AREA UPLOAD BUKTI TRANSFER (Hidden by default) --}}
-                        <div id="payment-proof-section" class="mt-4 pt-4 border-top" style="display: none; border-color: #eee !important;">
+                        
+                        <div id="payment-proof-section" class="mt-4 pt-3 border-top" style="display: none; border-color: #eee !important;">
                             <div class="alert alert-light border rounded-0 mb-3" role="alert">
                                 <small class="text-muted"><i class="bi bi-info-circle me-2"></i>Silakan transfer sesuai total tagihan, lalu unggah bukti transfer di bawah ini.</small>
                             </div>
-
-                            <label for="payment_proof" class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Bukti Transfer</label>
+                            <label class="form-label small text-uppercase fw-bold text-muted" style="letter-spacing: 0.1em; font-size: 0.7rem;">Bukti Transfer</label>
                             <input type="file" name="payment_proof" id="payment_proof" class="form-control rounded-0 bg-subtle border-0 p-3" accept="image/*">
                             <div class="form-text small text-muted mt-2">Format: JPG, PNG, JPEG. Maks: 2MB.</div>
                         </div>
                     </div>
                 </div>
-
-                <button type="submit" class="btn btn-primary-custom w-100 py-3 text-uppercase fw-bold rounded-0 mb-5" style="letter-spacing: 0.15em;">
-                    Konfirmasi Sewa
-                </button>
             </div>
 
-            <div class="col-lg-4">
+            <div class="col-12 col-lg-4">
                 <div class="card border rounded-0 bg-subtle p-4 sticky-top" style="border-color: var(--border-color); top: 100px; z-index: 1;">
-                    <h5 class="fw-normal text-uppercase text-black mb-4 pb-3 border-bottom border-black" style="font-family: 'Marcellus', serif; letter-spacing: 0.1em;">Ringkasan Biaya</h5>
-
+                    <h5 class="fw-normal text-uppercase text-black mb-4 pb-3 border-bottom border-black font-serif h6">Ringkasan Biaya</h5>
                     @if($product)
                     <div class="d-flex align-items-center mb-4">
                         <div class="flex-shrink-0 border p-1 bg-white me-3" style="border-color: #e0e0e0;">
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="d-block object-fit-cover" style="width: 60px; height: 60px;">
                         </div>
                         <div class="flex-grow-1 overflow-hidden">
-                            <h6 class="text-uppercase small fw-bold text-black mb-1 text-break" style="letter-spacing: 0.05em; line-height: 1.4;">
-                                {{ $product->name }}
-                            </h6>
-                            <p class="mb-0" style="font-size: 0.75rem;">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
+                            <h6 class="text-uppercase small fw-bold text-black mb-1 text-break" style="letter-spacing: 0.05em; line-height: 1.4;">{{ $product->name }}</h6>
+                            <p class="mb-0 text-muted" style="font-size: 0.75rem;">Rp {{ number_format($product->rent_price_per_day,0,',','.') }} / hari</p>
                         </div>
                     </div>
                     @endif
@@ -216,10 +196,12 @@
                         <span class="fw-bold text-black" id="shipping-cost-display">Rp 0</span>
                     </div>
 
-                    <div class="d-flex justify-content-between border-top border-black pt-4">
-                        <span class="fw-bold fs-5 text-uppercase" style="font-family: 'Marcellus', serif;">Total</span>
-                        <span class="fw-bold fs-5 text-black" id="total-payment" style="font-family: 'Marcellus', serif;">Rp 0</span>
+                    <div class="d-flex justify-content-between border-top border-black pt-4 mb-4">
+                        <span class="fw-bold fs-5 text-uppercase font-serif">Total</span>
+                        <span class="fw-bold fs-5 text-black font-serif" id="total-payment">Rp 0</span>
                     </div>
+
+                    <button type="submit" form="rentForm" class="btn btn-primary-custom w-100 py-3 text-uppercase fw-bold rounded-0" style="letter-spacing: 0.15em;">Konfirmasi Sewa</button>
                 </div>
             </div>
         </div>
@@ -356,19 +338,16 @@
     $('#start_date, #end_date, #discount_id').change(calculateAll);
     $(document).ready(calculateAll);
 
-    // Toggle Upload Bukti Transfer
     $('.payment-method-radio').on('change', function() {
         const methodName = $(this).data('name');
         
-        // Logika: Jika nama metode mengandung kata "transfer", tampilkan upload
-        // Sesuaikan kata kunci ini dengan nama metode di database Anda
         if (methodName.includes('transfer') || methodName.includes('bank')) {
             $('#payment-proof-section').slideDown();
-            $('#payment_proof').prop('required', true); // Wajib upload jika transfer
+            $('#payment_proof').prop('required', true);
         } else {
             $('#payment-proof-section').slideUp();
-            $('#payment_proof').prop('required', false); // Tidak wajib jika bukan transfer
-            $('#payment_proof').val(''); // Reset file jika ganti metode
+            $('#payment_proof').prop('required', false);
+            $('#payment_proof').val('');
         }
     });
 </script>

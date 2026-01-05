@@ -25,8 +25,7 @@ class Rent extends Model{
         'customer_address', 
         'customer_name', 
         'customer_phone', 
-        'notes',
-        'payment_proof'
+        'notes'
     ];
 
     protected $casts = [
@@ -83,6 +82,43 @@ class Rent extends Model{
             'cancelled' => 'Dibatalkan',
             'overdue' => 'Terlambat'
         ];
+    }
+
+    public function getStatusStyleAttribute(){
+        $style = [
+            'bg' => '#fff',
+            'color' => '#000',
+            'border' => '1px solid #000',
+            'label' => strtoupper($this->status)
+        ];
+
+        switch ($this->status) {
+            case 'payment_check':
+                $style = ['bg' => '#ffc107', 'color' => '#000', 'border' => 'none', 'label' => 'CEK BAYAR'];
+                break;
+            case 'pending':
+                $style = ['bg' => '#fff', 'color' => '#666', 'border' => '1px solid #ccc', 'label' => 'BELUM BAYAR'];
+                break;
+            case 'confirmed':
+                $style = ['bg' => '#17a2b8', 'color' => '#fff', 'border' => 'none', 'label' => 'TERKONFIRMASI'];
+                break;
+            case 'active':
+                $style = ['bg' => '#28a745', 'color' => '#fff', 'border' => 'none', 'label' => 'SEDANG DISEWA'];
+                break;
+            case 'returned':
+                $style = ['bg' => '#6c757d', 'color' => '#fff', 'border' => 'none', 'label' => 'DIKEMBALIKAN'];
+                break;
+            case 'completed':
+                $style = ['bg' => '#000', 'color' => '#fff', 'border' => 'none', 'label' => 'SELESAI'];
+                break;
+            case 'overdue':
+                $style = ['bg' => '#dc3545', 'color' => '#fff', 'border' => 'none', 'label' => 'TERLAMBAT'];
+                break;
+            case 'cancelled':
+                $style = ['bg' => '#fff', 'color' => '#dc3545', 'border' => '1px solid #dc3545', 'label' => 'DIBATALKAN'];
+                break;
+        }
+        return $style;
     }
 
     public function canBeCancelled(){

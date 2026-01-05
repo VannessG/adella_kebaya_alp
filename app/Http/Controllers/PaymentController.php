@@ -52,18 +52,6 @@ class PaymentController extends Controller{
             $proofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
             $paymentData['proof_image'] = $proofPath;
             $paymentData['status'] = 'processing'; // Menandakan sedang dicek admin
-
-            if ($type === 'rent') {
-                $payable->update([
-                    'status' => 'payment_check', // Ubah status SEWA jadi 'payment_check'
-                    'payment_proof' => $proofPath // Update juga kolom bukti di tabel Rent agar sinkron
-                ]);
-            } elseif ($type === 'order') {
-                $payable->update([
-                    'status' => 'payment_check', // Sesuaikan jika order punya status serupa
-                    'payment_proof' => $proofPath // Update juga kolom bukti di tabel Order agar sinkron
-                ]);
-            }
         }
 
         // Simpan atau Update (Polymorphic creation)
@@ -71,6 +59,11 @@ class PaymentController extends Controller{
             ['transaction_id' => $payable->id, 'transaction_type' => get_class($payable)],
             $paymentData
         );
+
+        // Update status transaksi SETELAH payment berhasil di-save
+        if ($paymentMethod->type === 'transfer' && $request->hasFile('payment_proof')) {
+            $payable->update(['status' => 'payment_check']);
+        }
 
         // LOGIKA MIDTRANS
         if ($paymentMethod->type === 'qris') {
@@ -111,6 +104,13 @@ class PaymentController extends Controller{
         } else {
             // Jika Reject
             $payment->update(['status' => 'failed']);
+            
+            // Update status transaksi kembali ke pending
+            $transaction = $payment->transaction;
+            if ($transaction) {
+                $transaction->update(['status' => 'pending']);
+            }
+            
             return back()->with('error', 'Pembayaran ditolak. User diminta upload ulang.');
         }
     }
@@ -184,12 +184,23 @@ class PaymentController extends Controller{
         
         $payment->update($validated);
         
+        $transaction = $payment->transaction;
+        
         if ($validated['status'] === 'success') {
-            $transaction = $payment->transaction;
             if ($transaction instanceof Order) {
                 $transaction->update(['status' => 'processing']);
             } elseif ($transaction instanceof Rent) {
-                $transaction->update(['status' => 'active']); // Diubah ke active agar sinkron dengan status sewa
+                $transaction->update(['status' => 'active']);
+            }
+        } elseif ($validated['status'] === 'processing') {
+            // Saat payment processing (ada bukti), set order/rent ke payment_check
+            if ($transaction) {
+                $transaction->update(['status' => 'payment_check']);
+            }
+        } elseif (in_array($validated['status'], ['pending', 'failed'])) {
+            // Saat payment pending/failed, set order/rent kembali ke pending
+            if ($transaction) {
+                $transaction->update(['status' => 'pending']);
             }
         }
         

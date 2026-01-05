@@ -8,7 +8,16 @@ use Illuminate\Http\Request;
 
 class EmployeeController extends Controller{
     public function index(){
-        $employees = Employee::with('branch')->latest()->get();
+        $query = Employee::with('branch')->latest();
+
+        if (session()->has('selected_branch')) {
+            $branch = session('selected_branch');
+            $query->where('branch_id', $branch->id);
+        }
+        elseif (session()->has('branch_id')) {
+            $query->where('branch_id', session('branch_id'));
+        }
+        $employees = $query->get();
         return view('admin.employees.index', compact('employees'));
     }
 
