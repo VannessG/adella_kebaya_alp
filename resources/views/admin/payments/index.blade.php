@@ -4,6 +4,61 @@
 
 @section('content')
 
+{{-- Custom CSS untuk merapikan layout --}}
+<style>
+    /* Default (Mobile): Card View */
+    .payment-list-item {
+        padding: 1.25rem;
+        border-bottom: 1px solid #eee;
+    }
+    .payment-list-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Desktop View: Table Row Style */
+    @media (min-width: 992px) {
+        .payment-list-header {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .payment-list-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .payment-list-item:hover {
+            background-color: #fafafa;
+        }
+
+        /* Definisi Lebar Kolom Desktop */
+        .col-payment-no { width: 12%; padding-right: 10px; }
+        .col-type       { width: 10%; padding-right: 10px; }
+        .col-ref        { width: 12%; padding-right: 10px; }
+        .col-method     { width: 10%; padding-right: 10px; }
+        
+        /* Jarak agar kolom jumlah tidak menempel */
+        .col-amount     { 
+            width: 15%; 
+            padding-right: 2.5rem; 
+        }
+        
+        .col-payer      { width: 18%; padding-right: 10px; }
+        .col-status     { width: 13%; padding-right: 10px; }
+        .col-actions    { width: 10%; }
+    }
+</style>
+
 <div class="container pb-4">
     <div class="row align-items-end">
         <div class="col-12 col-md-8 text-center text-md-start mb-3 mb-md-0">
@@ -17,6 +72,7 @@
 <div class="container pb-5 px-0 px-md-3">
     <div class="card border rounded-0 shadow-sm bg-white mx-0 mx-md-0">
         <div class="payment-list-container">
+            {{-- Header Desktop --}}
             <div class="payment-list-header d-none d-lg-flex">
                 <div class="col-payment-no">No. Bayar</div>
                 <div class="col-type">Tipe</div>
@@ -53,10 +109,12 @@
                             <span class="text-uppercase small fw-bold text-black" style="letter-spacing: 0.05em;">{{ $payment->view_method_name }}</span>
                         </div>
 
+                        {{-- Kolom Jumlah --}}
                         <div class="col-amount">
                             <span class="d-lg-none text-muted small text-uppercase d-block mb-1">Jumlah</span>{{ $payment->view_amount_formatted }}
                         </div>
 
+                        {{-- Kolom Pembayar --}}
                         <div class="col-payer">
                             <span class="d-lg-none text-muted small text-uppercase d-block mb-1">Pembayar</span>
                             <span class="text-uppercase small text-truncate d-block">{{ $payment->payer_name }}</span>
