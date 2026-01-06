@@ -4,6 +4,69 @@
 
 @section('content')
 
+{{-- CSS Tambahan untuk Merapikan Tampilan Mobile --}}
+<style>
+    /* Mobile View Styling */
+    .report-list-item {
+        padding: 1.25rem;
+        border-bottom: 1px solid #eee;
+        background-color: #fff;
+        position: relative; /* Penting untuk positioning badge */
+    }
+    
+    @media (max-width: 991px) {
+        /* Memisahkan Text Jual/Sewa ke pojok kanan atas agar tidak mepet kiri/numpuk dengan Ref */
+        .report-list-item .col-type {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+        }
+        
+        /* Memastikan badge tidak tertutup elemen lain */
+        .report-list-item .col-type .badge {
+            font-size: 0.75rem !important;
+            padding: 0.4em 0.8em !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Memberi jarak pada item lain agar tidak bertabrakan jika layar sangat kecil */
+        .col-ref {
+            margin-bottom: 0.5rem;
+            padding-right: 60px; /* Space agar tidak menabrak badge */
+        }
+    }
+
+    /* Desktop View Styling */
+    @media (min-width: 992px) {
+        .report-list-header {
+            display: flex;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid #eee;
+        }
+        .report-list-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            font-size: 0.85rem;
+        }
+        .report-list-item:hover {
+            background-color: #fafafa;
+        }
+
+        /* Lebar Kolom Desktop */
+        .col-date     { width: 20%; }
+        .col-ref      { width: 20%; }
+        .col-type     { width: 10%; }
+        .col-customer { width: 30%; }
+        .col-amount   { width: 20%; }
+    }
+</style>
+
 <div class="container pb-4">
     <div class="row align-items-end">
         <div class="col-12 col-md-8 text-center text-md-start mb-3 mb-md-0">
@@ -82,7 +145,7 @@
 
     <div class="card border rounded-0 shadow-none bg-white mx-0 mx-md-0" style="border-color: #E0E0E0;">
         
-        <div class="report-list-header">
+        <div class="report-list-header d-none d-lg-flex">
             <div class="col-date">Tanggal</div>
             <div class="col-ref">No. Referensi</div>
             <div class="col-type">Jenis</div>
@@ -93,8 +156,7 @@
         <div class="report-list-body">
             @forelse($allTransactions as $item)
                 <div class="report-list-item">
-                    <div class="col-date">{{ $item->created_at->format('d M Y, H:i') }}</div>
-                    <div class="col-ref"><span class="d-lg-none text-muted small text-uppercase">REF: </span>{{ $item->order_number ?? $item->rent_number }}</div>
+                    {{-- Badge Tipe (Jual/Sewa) dipindah ke sini agar bisa diatur posisinya --}}
                     <div class="col-type">
                         <span class="badge rounded-0 border text-uppercase px-2 py-1 
                             {{ $item->type == 'Jual' ? 'bg-white text-black border-black' : 'bg-black text-white border-black' }}"
@@ -103,14 +165,23 @@
                         </span>
                     </div>
 
+                    <div class="col-date">
+                        <span class="d-lg-none text-muted small d-block mb-1">{{ $item->created_at->format('d M Y, H:i') }}</span>
+                        <span class="d-none d-lg-block">{{ $item->created_at->format('d M Y, H:i') }}</span>
+                    </div>
+                    
+                    <div class="col-ref">
+                        <span class="d-lg-none text-muted small text-uppercase">REF: </span>{{ $item->order_number ?? $item->rent_number }}
+                    </div>
+                    
                     <div class="col-customer">
-                        <span class="d-lg-none text-muted small text-uppercase d-block mb-1">Pelanggan:</span>
+                        <span class="d-lg-none text-muted small text-uppercase d-block mb-1 mt-2">Pelanggan:</span>
                         <span class="text-black text-uppercase small" style="letter-spacing: 0.05em;">{{ $item->customer_name ?? 'Guest' }}</span>
                     </div>
 
                     <div class="col-amount">
-                        <span class="d-lg-none text-muted small text-uppercase float-start">Total:</span>
-                        <span class="fw-bold text-black">Rp {{ number_format($item->total_amount, 0, ',', '.') }}</span>
+                        <span class="d-lg-none text-muted small text-uppercase float-start mt-2">Total:</span>
+                        <span class="fw-bold text-black d-block d-lg-inline text-end mt-2 mt-lg-0">Rp {{ number_format($item->total_amount, 0, ',', '.') }}</span>
                     </div>
                 </div>
             @empty
