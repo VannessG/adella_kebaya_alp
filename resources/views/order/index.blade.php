@@ -100,8 +100,8 @@
     @else
         <div class="text-center py-5 border" style="border-style: dashed !important; border-color: #E0E0E0 !important;">
             <i class="bi bi-bag-x fs-1 text-muted mb-3 d-block"></i>
-            <h4 class="fw-normal text-uppercase text-muted mb-0" style="letter-spacing: 0.1em; font-size: 1rem;">Belum ada riwayat pembelian.</h4>
-            <a href="{{ url('/katalog') }}" class="btn btn-link text-black text-uppercase mt-3 fw-bold text-decoration-none border-bottom border-black p-0 pb-1" style="font-size: 0.8rem; letter-spacing: 0.1em;">Belanja Sekarang</a>
+            <h4 class="fw-normal text-uppercase text-muted mb-4" style="letter-spacing: 0.1em; font-size: 0.8rem;">Belum ada riwayat pembelian.</h4>
+            <a href="{{ url('/katalog') }}" class="btn-custom-outline" style="font-size: 0.8rem; letter-spacing: 0.1em;">Beli Sekarang</a>
         </div>
     @endif
 </div>

@@ -11,17 +11,17 @@ class BranchSeeder extends Seeder
     {
         $branches = [
             [
-                'name' => 'Adella Kebaya Surabaya',
-                'address' => 'Jl. Mayjend Sungkono No 98',
-                'city' => 'Surabaya',
-                'phone' => '+6281234567890',
+                'name' => 'Adella Kebaya Sidoarjo',
+                'address' => 'Pondok Tjandra Indah, Jl. Manggis VIII No.664',
+                'city' => 'Sidoarjo',
+                'phone' => '+6289678956340',
                 'is_active' => true
             ],
             [
                 'name' => 'Adella Kebaya Bojonegoro',
-                'address' => 'Jl. Jenderal Sudirman No 55',
+                'address' => 'Ruko Central Point, Jl. Veteran No.19',
                 'city' => 'Bojonegoro',
-                'phone' => '+6289876543210',
+                'phone' => '+6289678956340',
                 'is_active' => true
             ]
         ];

@@ -209,7 +209,7 @@
                             <button type="submit" class="btn btn-outline-danger rounded-0 px-4 py-2 fw-bold text-uppercase w-100" onclick="return confirm('Batalkan sewa ini?')">Batalkan</button>
                         </form>
                     @endif
-                    <a href="https://wa.me/62898051110211?text=Halo%20Admin,%20saya%20tanya%20sewa%20{{ $rent->rent_number }}" target="_blank" class="btn btn-outline-custom rounded-0 px-4 py-2 fw-bold text-uppercase w-100 w-md-auto">
+                    <a href="https://wa.me/6289678956340?text=Halo%20Admin,%20saya%20tanya%20sewa%20{{ $rent->rent_number }}" target="_blank" class="btn btn-outline-custom rounded-0 px-4 py-2 fw-bold text-uppercase w-100 w-md-auto">
                         <i class="bi bi-whatsapp me-2"></i> Hubungi CS
                     </a>
                 </div>

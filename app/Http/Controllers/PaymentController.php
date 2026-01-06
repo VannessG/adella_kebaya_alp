@@ -84,15 +84,12 @@ class PaymentController extends Controller{
             ->with('success', 'Bukti pembayaran berhasil diupload. Menunggu verifikasi admin.');
     }
 
-    // LOGIKA VERIFIKASI ADMIN (LENGKAP)
-    public function verifyPayment(Request $request, Payment $payment)
-    {
-        $action = $request->input('action'); // 'approve' atau 'reject'
+    public function verifyPayment(Request $request, Payment $payment){
+        $action = $request->input('action'); 
         
         if ($action === 'approve') {
             $payment->update(['status' => 'success']);
-            
-            // Otomatis update status transaksi terkait
+        
             $transaction = $payment->transaction;
             if ($transaction instanceof Order) {
                 $transaction->update(['status' => 'processing']);
@@ -102,10 +99,7 @@ class PaymentController extends Controller{
             
             return back()->with('success', 'Pembayaran disetujui! Status transaksi diperbarui.');
         } else {
-            // Jika Reject
             $payment->update(['status' => 'failed']);
-            
-            // Update status transaksi kembali ke pending
             $transaction = $payment->transaction;
             if ($transaction) {
                 $transaction->update(['status' => 'pending']);
@@ -115,8 +109,7 @@ class PaymentController extends Controller{
         }
     }
 
-    public function pay($paymentNumber)
-    {
+    public function pay($paymentNumber){
         $payment = Payment::where('payment_number', $paymentNumber)->firstOrFail();
         
         if($payment->status == 'success'){
@@ -130,29 +123,31 @@ class PaymentController extends Controller{
         ]);
     }
     
-    public function finish(Request $request)
-    {
+    public function finish(Request $request){
         return redirect()->route('home')->with('success', 'Transaksi sedang diproses.');
     }
 
     public function adminIndex(){
-        // 1. Fetch data with relationships
-        $payments = Payment::with(['paymentMethod', 'transaction'])
-            ->latest()
-            ->paginate(10);
+        $query = Payment::with(['paymentMethod', 'transaction'])->latest();
+        $branchId = null;
+        if (session()->has('selected_branch')) {
+            $branchId = session('selected_branch')->id;
+        } elseif (session()->has('branch_id')) {
+            $branchId = session('branch_id');
+        }
 
-        // 2. Transform data for the View (Move PHP logic here)
+        if ($branchId) {
+            $query->whereHas('transaction', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+
+        $payments = $query->paginate(10);
         $payments->getCollection()->transform(function ($payment) {
-            
-            // Logic: Check Transaction Type (Order or Rent)
-            // Check Full Class Name string stored in database
             $isOrder = $payment->transaction_type === 'App\Models\Order';
-
-            // Add custom properties for View
             $payment->view_type_label = $isOrder ? 'Jual' : 'Sewa';
-            $payment->view_type_is_order = $isOrder; // Boolean for styling
+            $payment->view_type_is_order = $isOrder; 
 
-            // Logic: Get Transaction Number safely
             if ($payment->transaction) {
                 $payment->view_transaction_number = $isOrder 
                     ? ($payment->transaction->order_number ?? '-') 
@@ -161,12 +156,8 @@ class PaymentController extends Controller{
                 $payment->view_transaction_number = '-';
             }
 
-            // Logic: Format Amount
             $payment->view_amount_formatted = 'Rp ' . number_format($payment->amount, 0, ',', '.');
-
-            // Logic: Payment Method Name
             $payment->view_method_name = $payment->paymentMethod->name ?? 'Manual';
-
             return $payment;
         });
 
@@ -176,14 +167,12 @@ class PaymentController extends Controller{
         ]);
     }
     
-    public function updateStatus(Request $request, Payment $payment)
-    {
+    public function updateStatus(Request $request, Payment $payment){
         $validated = $request->validate([
             'status' => 'required|in:pending,processing,success,failed,expired'
         ]);
         
         $payment->update($validated);
-        
         $transaction = $payment->transaction;
         
         if ($validated['status'] === 'success') {
@@ -193,12 +182,10 @@ class PaymentController extends Controller{
                 $transaction->update(['status' => 'active']);
             }
         } elseif ($validated['status'] === 'processing') {
-            // Saat payment processing (ada bukti), set order/rent ke payment_check
             if ($transaction) {
                 $transaction->update(['status' => 'payment_check']);
             }
         } elseif (in_array($validated['status'], ['pending', 'failed'])) {
-            // Saat payment pending/failed, set order/rent kembali ke pending
             if ($transaction) {
                 $transaction->update(['status' => 'pending']);
             }
